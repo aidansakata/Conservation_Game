@@ -1,0 +1,30 @@
+﻿name: Unity - Cache Library
+on:
+  push:
+    paths:
+      - 'Assets/**'
+      - 'Packages/**'
+      - 'ProjectSettings/**'
+      - '.github/workflows/unity-cache.yml'
+  pull_request:
+    paths:
+      - 'Assets/**'
+      - 'Packages/**'
+      - 'ProjectSettings/**'
+
+jobs:
+  cache-library:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: unity-library-${{ hashFiles('Packages/packages-lock.json', 'ProjectSettings/**', 'Assets/**') }}
+          restore-keys: |
+            unity-library-
+
+      - name: Skip build
+        run: echo "Unity build intentionally skipped."
