@@ -87,6 +87,8 @@ public class GridManager : MonoBehaviour
         if (showCellValues && valueLabelPrefab != null) SpawnValueLabels(def);
         else ClearValueLabels();
 
+        ConfigureCameraForLevel(currentLevelNumber);
+
         Debug.Log($"[GridManager] Painted {def.width}x{def.height} (level {currentLevelNumber}).");
     }
 
@@ -230,5 +232,29 @@ public class GridManager : MonoBehaviour
         for (int i = spawnedLabels.Count - 1; i >= 0; i--)
             if (spawnedLabels[i]) Destroy(spawnedLabels[i].gameObject);
         spawnedLabels.Clear();
+    }
+
+    private void ConfigureCameraForLevel(int levelNumber)
+    {
+        var cam = Camera.main;
+        if (cam == null) return;
+
+        switch (levelNumber)
+        {
+            case 1:
+                cam.transform.position = new Vector3(46f, 23f, -37.3f);
+                cam.orthographicSize = 15f;
+                break;
+            case 2:
+                cam.transform.position = new Vector3(49f, 25.3f, -37.3f);
+                cam.orthographicSize = 18f;
+                break;
+            case 3:
+                cam.transform.position = new Vector3(52f, 27f, -37.3f);
+                cam.orthographicSize = 22f;
+                break;
+            default:
+                break;
+        }
     }
 }

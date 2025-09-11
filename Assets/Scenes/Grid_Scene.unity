@@ -955,7 +955,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 15.1
+  orthographic size: 22
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -980,7 +980,7 @@ Transform:
   m_GameObject: {fileID: 304633864}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 46, y: 22.5, z: -37.3}
+  m_LocalPosition: {x: 52, y: 27, z: -37.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1765,9 +1765,9 @@ MonoBehaviour:
   tilemap: {fileID: 1026636513}
   typeToTile:
   - {fileID: 0}
-  - {fileID: 11400000, guid: fab86d0c44ecaa54cacdff0531df7ffd, type: 2}
+  - {fileID: 11400000, guid: 30a43bb6543048f44821ec63d6d44239, type: 2}
   - {fileID: 11400000, guid: 68a65453d1256444ea133e3dec45409a, type: 2}
-  - {fileID: 11400000, guid: 7ff0ae944a0224445aa16b7d9761f727, type: 2}
+  - {fileID: 11400000, guid: 357440e594e4ad840b17141a2ba5b65d, type: 2}
   level1Easy8x8:
     width: 8
     height: 8
@@ -2199,7 +2199,7 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
-  m_Transition: 1
+  m_Transition: 0
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
@@ -2344,7 +2344,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 825525834}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 11500000, guid: 290880d44598ba94d95395fa4d1e98c3, type: 3}
+        m_TargetAssemblyTypeName: UnityEngine.Object, UnityEngine
+        m_MethodName: 
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &825525834
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2626,7 +2638,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0.177}
-  m_AnchoredPosition: {x: -0.5, y: 0.5}
+  m_AnchoredPosition: {x: -0.5, y: -3}
   m_SizeDelta: {x: -1, y: -1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &902278888
@@ -7559,6 +7571,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1670628804}
   m_CullTransparentMesh: 1
+--- !u!1 &1717934202
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1717934203}
+  m_Layer: 0
+  m_Name: GridUI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1717934203
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1717934202}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 471.90793, y: 255.46643, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1776207133
 GameObject:
   m_ObjectHideFlags: 0
@@ -8456,3 +8499,4 @@ SceneRoots:
   - {fileID: 1450822411}
   - {fileID: 744526540}
   - {fileID: 928438697}
+  - {fileID: 1717934203}

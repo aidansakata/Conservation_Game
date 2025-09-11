@@ -86,9 +86,47 @@ public static class GridLayouts
         return def;
     }
 
-    // For now, all levels stub to the same layout:
-    private static LevelDefinition CreateLevel2() => CreateLevel1();
-    private static LevelDefinition CreateLevel3() => CreateLevel1();
+    // Implement distinct sizes for levels 2 and 3; leave 4 and 5 as stubs for now.
+    private static LevelDefinition CreateLevel2()
+    {
+        int w = 10, h = 10;
+        var def = new LevelDefinition
+        {
+            width = w,
+            height = h,
+            budget = 25000,
+            tileTypes = new List<int>(new int[w * h]),
+            costData = new List<int>(new int[w * h]),
+            ecoData1 = new List<int>(new int[w * h]),
+            ecoData2 = new List<int>(new int[w * h]),
+            ecoData3 = new List<int>(new int[w * h]),
+            lockedData = new List<int>(new int[w * h]),
+            displayValues = new List<int>(new int[w * h])
+        };
+
+        return def;
+    }
+
+    private static LevelDefinition CreateLevel3()
+    {
+        int w = 12, h = 12;
+        var def = new LevelDefinition
+        {
+            width = w,
+            height = h,
+            budget = 25000,
+            tileTypes = new List<int>(new int[w * h]),
+            costData = new List<int>(new int[w * h]),
+            ecoData1 = new List<int>(new int[w * h]),
+            ecoData2 = new List<int>(new int[w * h]),
+            ecoData3 = new List<int>(new int[w * h]),
+            lockedData = new List<int>(new int[w * h]),
+            displayValues = new List<int>(new int[w * h])
+        };
+
+        return def;
+    }
+
     private static LevelDefinition CreateLevel4() => CreateLevel1();
     private static LevelDefinition CreateLevel5() => CreateLevel1();
 }

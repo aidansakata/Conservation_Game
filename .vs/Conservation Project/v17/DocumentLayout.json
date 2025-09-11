@@ -3,7 +3,11 @@
   "WorkspaceRootPath": "C:\\Users\\aidan\\Desktop\\Conservation Project\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{653382FB-CFF6-3C48-1249-E6A91BE59C7C}|Assembly-CSharp-Editor.csproj|c:\\users\\aidan\\desktop\\conservation project\\assets\\scripts\\editor\\populatedemolevelsongridmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|c:\\users\\aidan\\desktop\\conservation project\\assets\\scripts\\ui\\gridnavigation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\ui\\gridnavigation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{653382FB-CFF6-3C48-1249-E6A91BE59C7C}|Assembly-CSharp-Editor.csproj|C:\\Users\\aidan\\Desktop\\Conservation Project\\assets\\scripts\\editor\\populatedemolevelsongridmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{653382FB-CFF6-3C48-1249-E6A91BE59C7C}|Assembly-CSharp-Editor.csproj|solutionrelative:assets\\scripts\\editor\\populatedemolevelsongridmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
@@ -31,6 +35,19 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "GridNavigation.cs",
+              "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\UI\\GridNavigation.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\UI\\GridNavigation.cs",
+              "ToolTip": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\UI\\GridNavigation.cs",
+              "RelativeToolTip": "Assets\\Scripts\\UI\\GridNavigation.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-04T17:53:16.463Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": "PopulateDemoLevelsOnGridManager.cs",
               "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Editor\\PopulateDemoLevelsOnGridManager.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\Editor\\PopulateDemoLevelsOnGridManager.cs",
@@ -38,12 +55,11 @@
               "RelativeToolTip": "Assets\\Scripts\\Editor\\PopulateDemoLevelsOnGridManager.cs",
               "ViewState": "AgIAABAAAAAAAAAAAAAwwCgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-02T01:52:03.558Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-02T01:52:03.558Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "GridManager.cs",
               "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Managers\\GridManager.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\Managers\\GridManager.cs",
@@ -55,7 +71,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "GridLayouts.cs",
               "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Managers\\GridLayouts.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\Managers\\GridLayouts.cs",
@@ -67,7 +83,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "LevelDefinition.cs",
               "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Data\\LevelDefinition.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\Data\\LevelDefinition.cs",
