@@ -3,24 +3,64 @@
   "WorkspaceRootPath": "C:\\Users\\aidan\\Desktop\\Conservation Project\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|c:\\users\\aidan\\desktop\\conservation project\\assets\\scripts\\ui\\gridnavigation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|c:\\users\\aidan\\desktop\\conservation project\\assets\\scripts\\ui\\pausemenu.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\ui\\pausemenu.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|c:\\users\\aidan\\desktop\\conservation project\\assets\\scripts\\ui\\menucontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\ui\\menucontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|c:\\users\\aidan\\desktop\\conservation project\\assets\\scripts\\ui\\mainmenucontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\ui\\mainmenucontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|c:\\users\\aidan\\desktop\\conservation project\\assets\\scripts\\ui\\levelselectcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\ui\\levelselectcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|c:\\users\\aidan\\desktop\\conservation project\\assets\\scripts\\ui\\levelselect.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\ui\\levelselect.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|C:\\Users\\aidan\\Desktop\\Conservation Project\\assets\\scripts\\ui\\gridnavigation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\ui\\gridnavigation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{653382FB-CFF6-3C48-1249-E6A91BE59C7C}|Assembly-CSharp-Editor.csproj|C:\\Users\\aidan\\Desktop\\Conservation Project\\assets\\scripts\\editor\\populatedemolevelsongridmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{653382FB-CFF6-3C48-1249-E6A91BE59C7C}|Assembly-CSharp-Editor.csproj|solutionrelative:assets\\scripts\\editor\\populatedemolevelsongridmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|c:\\users\\aidan\\desktop\\conservation project\\assets\\scripts\\ui\\endlevelmenu.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\ui\\endlevelmenu.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|C:\\Users\\aidan\\Desktop\\Conservation Project\\assets\\scripts\\managers\\gridmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\managers\\gridmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|C:\\Users\\aidan\\Desktop\\Conservation Project\\assets\\scripts\\ui\\backtolevelselect.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\ui\\backtolevelselect.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|C:\\Users\\aidan\\Desktop\\Conservation Project\\assets\\scripts\\data\\leveldefinition.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\data\\leveldefinition.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|c:\\users\\aidan\\desktop\\conservation project\\assets\\scripts\\services\\pathfindingservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\services\\pathfindingservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|c:\\users\\aidan\\desktop\\conservation project\\assets\\scripts\\services\\corridorvalidator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\services\\corridorvalidator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|c:\\users\\aidan\\desktop\\conservation project\\assets\\scripts\\managers\\sceneloader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\managers\\sceneloader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|c:\\users\\aidan\\desktop\\conservation project\\assets\\scripts\\managers\\leveljsonloader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\managers\\leveljsonloader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|C:\\Users\\aidan\\Desktop\\Conservation Project\\assets\\scripts\\managers\\leveldefinitionmapper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\managers\\leveldefinitionmapper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|C:\\Users\\aidan\\Desktop\\Conservation Project\\assets\\scripts\\managers\\gridlayouts.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\managers\\gridlayouts.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|C:\\Users\\aidan\\Desktop\\Conservation Project\\assets\\scripts\\managers\\gridmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\managers\\gridmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -35,6 +75,162 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "PauseMenu.cs",
+              "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\UI\\PauseMenu.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\UI\\PauseMenu.cs",
+              "ToolTip": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\UI\\PauseMenu.cs",
+              "RelativeToolTip": "Assets\\Scripts\\UI\\PauseMenu.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-25T15:56:18.025Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MenuController.cs",
+              "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\UI\\MenuController.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\UI\\MenuController.cs",
+              "ToolTip": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\UI\\MenuController.cs",
+              "RelativeToolTip": "Assets\\Scripts\\UI\\MenuController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-25T15:56:12.068Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "MainMenuController.cs",
+              "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\UI\\MainMenuController.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\UI\\MainMenuController.cs",
+              "ToolTip": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\UI\\MainMenuController.cs",
+              "RelativeToolTip": "Assets\\Scripts\\UI\\MainMenuController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-25T15:56:10.749Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "LevelSelectController.cs",
+              "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\UI\\LevelSelectController.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\UI\\LevelSelectController.cs",
+              "ToolTip": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\UI\\LevelSelectController.cs",
+              "RelativeToolTip": "Assets\\Scripts\\UI\\LevelSelectController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-25T15:56:08.672Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "LevelSelect.cs",
+              "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\UI\\LevelSelect.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\UI\\LevelSelect.cs",
+              "ToolTip": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\UI\\LevelSelect.cs",
+              "RelativeToolTip": "Assets\\Scripts\\UI\\LevelSelect.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-25T15:56:06.496Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "EndLevelMenu.cs",
+              "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\UI\\EndLevelMenu.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\UI\\EndLevelMenu.cs",
+              "ToolTip": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\UI\\EndLevelMenu.cs",
+              "RelativeToolTip": "Assets\\Scripts\\UI\\EndLevelMenu.cs",
+              "ViewState": "AgIAADUAAAAAAAAAAAAIwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-25T15:56:01.309Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "BackToLevelSelect.cs",
+              "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\UI\\BackToLevelSelect.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\UI\\BackToLevelSelect.cs",
+              "ToolTip": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\UI\\BackToLevelSelect.cs",
+              "RelativeToolTip": "Assets\\Scripts\\UI\\BackToLevelSelect.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-25T02:09:49.149Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "PathFindingService.cs",
+              "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Services\\PathFindingService.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Services\\PathFindingService.cs",
+              "ToolTip": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Services\\PathFindingService.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Services\\PathFindingService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-25T15:55:56.385Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "CorridorValidator.cs",
+              "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Services\\CorridorValidator.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Services\\CorridorValidator.cs",
+              "ToolTip": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Services\\CorridorValidator.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Services\\CorridorValidator.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-25T15:55:52.715Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "SceneLoader.cs",
+              "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Managers\\SceneLoader.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Managers\\SceneLoader.cs",
+              "ToolTip": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Managers\\SceneLoader.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Managers\\SceneLoader.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-25T15:52:35.365Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "LevelJsonLoader.cs",
+              "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Managers\\LevelJsonLoader.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Managers\\LevelJsonLoader.cs",
+              "ToolTip": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Managers\\LevelJsonLoader.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Managers\\LevelJsonLoader.cs",
+              "ViewState": "AgIAAGUAAAAAAAAAAAAIwFEAAAAhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-25T15:51:55.299Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "LevelDefinitionMapper.cs",
+              "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Managers\\LevelDefinitionMapper.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Managers\\LevelDefinitionMapper.cs",
+              "ToolTip": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Managers\\LevelDefinitionMapper.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Managers\\LevelDefinitionMapper.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACMAAAApAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-25T01:16:36.86Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
               "Title": "GridNavigation.cs",
               "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\UI\\GridNavigation.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\UI\\GridNavigation.cs",
@@ -47,51 +243,29 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "PopulateDemoLevelsOnGridManager.cs",
-              "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Editor\\PopulateDemoLevelsOnGridManager.cs",
-              "RelativeDocumentMoniker": "Assets\\Scripts\\Editor\\PopulateDemoLevelsOnGridManager.cs",
-              "ToolTip": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Editor\\PopulateDemoLevelsOnGridManager.cs",
-              "RelativeToolTip": "Assets\\Scripts\\Editor\\PopulateDemoLevelsOnGridManager.cs",
-              "ViewState": "AgIAABAAAAAAAAAAAAAwwCgAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-02T01:52:03.558Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 14,
               "Title": "GridManager.cs",
               "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Managers\\GridManager.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\Managers\\GridManager.cs",
               "ToolTip": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Managers\\GridManager.cs",
               "RelativeToolTip": "Assets\\Scripts\\Managers\\GridManager.cs",
-              "ViewState": "AgIAANIAAAAAAAAAAAAwwOoAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAE8BAAAAAAAAAADwv8YAAAAnAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-11T23:10:08.167Z"
+              "WhenOpened": "2025-08-11T23:10:08.167Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 13,
               "Title": "GridLayouts.cs",
               "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Managers\\GridLayouts.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\Managers\\GridLayouts.cs",
               "ToolTip": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Managers\\GridLayouts.cs",
               "RelativeToolTip": "Assets\\Scripts\\Managers\\GridLayouts.cs",
-              "ViewState": "AgIAACgAAAAAAAAAAAAQwDUAAAALAAAAAAAAAA==",
+              "ViewState": "AgIAAEsAAAAAAAAAAAAowFMAAAAoAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-11T23:05:08.801Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "LevelDefinition.cs",
-              "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Data\\LevelDefinition.cs",
-              "RelativeDocumentMoniker": "Assets\\Scripts\\Data\\LevelDefinition.cs",
-              "ToolTip": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Data\\LevelDefinition.cs",
-              "RelativeToolTip": "Assets\\Scripts\\Data\\LevelDefinition.cs",
-              "ViewState": "AgIAADUAAAAAAAAAAAA/wE0AAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-11T23:03:46.189Z"
+              "WhenOpened": "2025-08-11T23:05:08.801Z",
+              "EditorCaption": ""
             }
           ]
         }

@@ -81,7 +81,7 @@ public static class GridLayouts
                 def.displayValues[idx] = eco7[y, x];
             }
 
-        // leave the rest at zero / unlocked
+        // leave the rest at zero and/or unlocked
 
         return def;
     }

@@ -57,7 +57,17 @@ export default function UnityCanvas({ selectedLevel = 1 }: UnityCanvasProps) {
 							startLevel: (n: number) => instance.SendMessage('GameManager', 'OnLevelSelected', n),
 						};
 
+						// Backwards-compatible numeric selection
 						instance.SendMessage('GameManager', 'OnLevelSelected', selectedLevel ?? 1);
+
+						// If a string id was selected in the web UI, pass it to GridManager.StartLevelById
+						try {
+							const id = localStorage.getItem('unity:selectedLevelId');
+							if (id && id.length > 0) {
+								instance.SendMessage('GridManager', 'StartLevelById', id);
+								localStorage.removeItem('unity:selectedLevelId');
+							}
+						} catch { }
 					} catch (e: unknown) {
 						setError((e as Error).message);
 					}

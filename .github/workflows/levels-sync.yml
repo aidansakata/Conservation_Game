@@ -1,0 +1,33 @@
+name: Sync Levels JSON
+on:
+  push:
+    paths:
+      - 'Levels/**'
+      - '.github/workflows/levels-sync.yml'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy to StreamingAssets (Unity)
+        run: |
+          mkdir -p Assets/StreamingAssets/Levels
+          rsync -a --delete Levels/ Assets/StreamingAssets/Levels/
+
+      - name: Copy to Next.js public (WebGL)
+        run: |
+          mkdir -p web/public/levels
+          rsync -a --delete Levels/ web/public/levels/
+
+      - name: Commit sync (if repo tracks generated assets)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Assets/StreamingAssets/Levels web/public/levels || true
+          git diff --cached --quiet || git commit -m "Sync Levels JSON to runtime paths"
+
+      - name: Push
+        run: |
+          git push || true

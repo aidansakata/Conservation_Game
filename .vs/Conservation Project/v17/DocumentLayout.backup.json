@@ -3,11 +3,27 @@
   "WorkspaceRootPath": "C:\\Users\\aidan\\Desktop\\Conservation Project\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|c:\\users\\aidan\\desktop\\conservation project\\assets\\scripts\\ui\\gridnavigation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|C:\\Users\\aidan\\Desktop\\Conservation Project\\assets\\scripts\\ui\\levelselectcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\ui\\levelselectcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|c:\\users\\aidan\\desktop\\conservation project\\assets\\scripts\\ui\\backtolevelselect.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\ui\\backtolevelselect.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{653382FB-CFF6-3C48-1249-E6A91BE59C7C}|Assembly-CSharp-Editor.csproj|C:\\Users\\aidan\\Desktop\\Conservation Project\\assets\\editor\\levelpreflight.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{653382FB-CFF6-3C48-1249-E6A91BE59C7C}|Assembly-CSharp-Editor.csproj|solutionrelative:assets\\editor\\levelpreflight.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|C:\\Users\\aidan\\Desktop\\Conservation Project\\assets\\scripts\\managers\\leveldefinitionmapper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\managers\\leveldefinitionmapper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|C:\\Users\\aidan\\Desktop\\Conservation Project\\assets\\scripts\\ui\\gridnavigation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{9884AE3A-8556-EE33-76E1-380728FFEB67}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\ui\\gridnavigation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{653382FB-CFF6-3C48-1249-E6A91BE59C7C}|Assembly-CSharp-Editor.csproj|c:\\users\\aidan\\desktop\\conservation project\\assets\\scripts\\editor\\populatedemolevelsongridmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{653382FB-CFF6-3C48-1249-E6A91BE59C7C}|Assembly-CSharp-Editor.csproj|C:\\Users\\aidan\\Desktop\\Conservation Project\\assets\\scripts\\editor\\populatedemolevelsongridmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{653382FB-CFF6-3C48-1249-E6A91BE59C7C}|Assembly-CSharp-Editor.csproj|solutionrelative:assets\\scripts\\editor\\populatedemolevelsongridmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
@@ -30,11 +46,61 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "BackToLevelSelect.cs",
+              "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\UI\\BackToLevelSelect.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\UI\\BackToLevelSelect.cs",
+              "ToolTip": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\UI\\BackToLevelSelect.cs",
+              "RelativeToolTip": "Assets\\Scripts\\UI\\BackToLevelSelect.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-25T02:09:49.149Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "LevelPreflight.cs",
+              "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Editor\\LevelPreflight.cs",
+              "RelativeDocumentMoniker": "Assets\\Editor\\LevelPreflight.cs",
+              "ToolTip": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Editor\\LevelPreflight.cs",
+              "RelativeToolTip": "Assets\\Editor\\LevelPreflight.cs",
+              "ViewState": "AgIAAAsAAAAAAAAAAAAwwCMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-25T01:18:15.708Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "LevelDefinitionMapper.cs",
+              "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Managers\\LevelDefinitionMapper.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Managers\\LevelDefinitionMapper.cs",
+              "ToolTip": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Managers\\LevelDefinitionMapper.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Managers\\LevelDefinitionMapper.cs",
+              "ViewState": "AgIAABMAAAAAAAAAAAAwwCsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-25T01:16:36.86Z"
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "LevelSelectController.cs",
+              "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\UI\\LevelSelectController.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\UI\\LevelSelectController.cs",
+              "ToolTip": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\UI\\LevelSelectController.cs",
+              "RelativeToolTip": "Assets\\Scripts\\UI\\LevelSelectController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-25T01:14:13.445Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
               "Title": "GridNavigation.cs",
               "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\UI\\GridNavigation.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\UI\\GridNavigation.cs",
@@ -42,12 +108,11 @@
               "RelativeToolTip": "Assets\\Scripts\\UI\\GridNavigation.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-04T17:53:16.463Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-04T17:53:16.463Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 5,
               "Title": "PopulateDemoLevelsOnGridManager.cs",
               "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Editor\\PopulateDemoLevelsOnGridManager.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\Editor\\PopulateDemoLevelsOnGridManager.cs",
@@ -55,12 +120,11 @@
               "RelativeToolTip": "Assets\\Scripts\\Editor\\PopulateDemoLevelsOnGridManager.cs",
               "ViewState": "AgIAABAAAAAAAAAAAAAwwCgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-02T01:52:03.558Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-02T01:52:03.558Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 6,
               "Title": "GridManager.cs",
               "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Managers\\GridManager.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\Managers\\GridManager.cs",
@@ -72,7 +136,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 8,
               "Title": "GridLayouts.cs",
               "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Managers\\GridLayouts.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\Managers\\GridLayouts.cs",
@@ -84,7 +148,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 7,
               "Title": "LevelDefinition.cs",
               "DocumentMoniker": "C:\\Users\\aidan\\Desktop\\Conservation Project\\Assets\\Scripts\\Data\\LevelDefinition.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\Data\\LevelDefinition.cs",

@@ -29,6 +29,7 @@ public class GridManager : MonoBehaviour
     private GameTiles tilesManager;
     private LevelDefinition def;
     private int currentLevelNumber;
+    private bool _isLoading;
 
     void Awake()
     {
@@ -39,28 +40,111 @@ public class GridManager : MonoBehaviour
 
     void Start()
     {
+        // Prefer string-based selected id when present (set by LevelSelectController)
+        if (!string.IsNullOrEmpty(GameState.SelectedLevelId))
+        {
+            var cfg = Resources.Load<ApiConfig>("ApiConfig");
+            var baseUrl = cfg != null ? cfg.baseApiUrl : "";
+            if (!string.IsNullOrEmpty(baseUrl))
+            {
+                _isLoading = true;
+                StartCoroutine(LevelJsonLoader.LoadLevelJsonById(baseUrl, GameState.SelectedLevelId, (json) => {
+                    try
+                    {
+                        var j = JsonUtility.FromJson<LevelJson>(json);
+                        var defLocal = LevelDefinitionMapper.FromJson(j);
+                        PrepareDefinition(defLocal, -1);
+                        def = defLocal;
+
+                        PaintTiles(def);
+                        ApplyToWorldTiles(def);
+
+                        if (showCellValues && valueLabelPrefab != null) SpawnValueLabels(def);
+                        else ClearValueLabels();
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogWarning($"JSON load failed for id '{GameState.SelectedLevelId}': {ex.Message}. Falling back to numeric level {GameState.SelectedLevel}.");
+                        LoadLevel(GameState.SelectedLevel);
+                    }
+                    finally
+                    {
+                        _isLoading = false;
+                    }
+                }, (err) => {
+                    Debug.LogWarning($"JSON load failed for id '{GameState.SelectedLevelId}': {err}. Falling back to numeric level {GameState.SelectedLevel}.");
+                    _isLoading = false;
+                    LoadLevel(GameState.SelectedLevel);
+                }));
+
+                return; // avoid running numeric flow below
+            }
+            else
+            {
+                Debug.LogWarning("ApiConfig not found or baseApiUrl empty. Falling back to numeric level.");
+            }
+        }
+
         currentLevelNumber = Mathf.Clamp(GameState.SelectedLevel, 1, 5);
         LoadLevel(currentLevelNumber);
     }
 
     public void LoadLevel(int levelNumber)
     {
+        _isLoading = true;
         currentLevelNumber = Mathf.Clamp(levelNumber, 1, 5);
         GameState.SelectedLevel = currentLevelNumber;
 
-        // 1) Try runtime provider first (if present in your project).
+        // Try JSON-first. If not present or parse fails, fall back to existing providers.
+        StartCoroutine(LevelJsonLoader.LoadLevelJson(
+            currentLevelNumber,
+            onLoaded: (json) =>
+            {
+                try
+                {
+                    var lj = JsonUtility.FromJson<LevelJson>(json);
+                    var d = LevelDefinitionMapper.FromJson(lj);
+                    PrepareDefinition(d, currentLevelNumber);
+                    def = d;
+
+                    PaintTiles(def);
+                    ApplyToWorldTiles(def);
+
+                    if (showCellValues && valueLabelPrefab != null) SpawnValueLabels(def);
+                    else ClearValueLabels();
+
+                    ConfigureCameraForLevel(currentLevelNumber);
+                    _isLoading = false;
+                    Debug.Log($"[GridManager] Painted (from JSON) {def.width}x{def.height} (level {currentLevelNumber}).");
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogWarning($"JSON parse failed for level {currentLevelNumber}: {ex.Message}. Falling back.");
+                    LoadLevelFallback(currentLevelNumber);
+                }
+            },
+            onError: (err) =>
+            {
+                Debug.Log($"No JSON found for level {currentLevelNumber} ({err}). Falling back.");
+                LoadLevelFallback(currentLevelNumber);
+            }
+        ));
+    }
+
+    private void LoadLevelFallback(int levelNumber)
+    {
+        // 1) Try runtime provider first.
         LevelDefinition candidate = null;
         try
         {
-            // If you have a GridLayouts provider in your project, use it.
-            candidate = GridLayouts.GetLayout(currentLevelNumber);
+            candidate = GridLayouts.GetLayout(levelNumber);
         }
         catch { /* provider not present → ignore */ }
 
         // 2) Fallback to nested inspector assignments.
         if (candidate == null)
         {
-            candidate = currentLevelNumber switch
+            candidate = levelNumber switch
             {
                 1 => level1Easy8x8,
                 2 => level2Med10x10,
@@ -73,12 +157,12 @@ public class GridManager : MonoBehaviour
 
         if (candidate == null)
         {
-            Debug.LogError($"GridManager: No LevelDefinition available for level {currentLevelNumber}");
+            Debug.LogError($"GridManager: No LevelDefinition available for level {levelNumber}");
             return;
         }
 
         // Ensure arrays sized; if empty, populate with a distinct demo pattern.
-        PrepareDefinition(candidate, currentLevelNumber);
+        PrepareDefinition(candidate, levelNumber);
         def = candidate;
 
         PaintTiles(def);
@@ -87,13 +171,51 @@ public class GridManager : MonoBehaviour
         if (showCellValues && valueLabelPrefab != null) SpawnValueLabels(def);
         else ClearValueLabels();
 
-        ConfigureCameraForLevel(currentLevelNumber);
+        ConfigureCameraForLevel(levelNumber);
 
-        Debug.Log($"[GridManager] Painted {def.width}x{def.height} (level {currentLevelNumber}).");
+        _isLoading = false;
+
+        Debug.Log($"[GridManager] Painted {def.width}x{def.height} (level {levelNumber}).");
     }
 
     public void ReloadCurrent() => LoadLevel(currentLevelNumber);
     public void NextLevel() => LoadLevel(Mathf.Clamp(currentLevelNumber + 1, 1, 5));
+
+    public void StartLevelById(string levelId)
+    {
+        if (_isLoading) return;
+        _isLoading = true;
+
+        StartCoroutine(LevelJsonLoader.LoadLevelJsonById(levelId, (json) =>
+        {
+            try
+            {
+                var j = JsonUtility.FromJson<LevelJson>(json);
+                var def = LevelDefinitionMapper.FromJson(j);
+                PrepareDefinition(def, -1);
+                def = def;
+
+                PaintTiles(def);
+                ApplyToWorldTiles(def);
+
+                if (showCellValues && valueLabelPrefab != null) SpawnValueLabels(def);
+                else ClearValueLabels();
+
+                _isLoading = false;
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"JSON parse failed for level id {levelId}: {ex.Message}. Falling back.");
+                _isLoading = false;
+                LoadLevelFallback(GameState.SelectedLevel);
+            }
+        }, (err) =>
+        {
+            Debug.LogWarning($"JSON load failed ({levelId}): {err}; falling back");
+            _isLoading = false;
+            LoadLevelFallback(GameState.SelectedLevel);
+        }));
+    }
 
     // ---------- internal ----------
 

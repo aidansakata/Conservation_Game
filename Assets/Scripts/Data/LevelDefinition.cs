@@ -9,7 +9,7 @@ public class LevelDefinition
     public int height = 8;
     public int budget = 0;
 
-    // Per-cell arrays: size must be width*height
+    // Per cell arrays: size must be width * height
     public List<int> tileTypes = new List<int>();
     public List<int> costData = new List<int>();
     public List<int> ecoData1 = new List<int>();
@@ -19,7 +19,7 @@ public class LevelDefinition
     public List<int> displayValues = new List<int>();
     public List<int> optimalData = new List<int>();
 
-    // Optional clusters / paths
+    // Optional clusters and/or paths
     public List<Vector2Int> startCluster = new List<Vector2Int>();
     public List<Vector2Int> endCluster = new List<Vector2Int>();
     public List<Vector2Int> optimalPath = new List<Vector2Int>();
@@ -27,7 +27,7 @@ public class LevelDefinition
     public int CellCount => Mathf.Max(0, width * height);
     public int Idx(int x, int y) => y * width + x;
 
-    /// Ensure all cell lists are sized to width*height and filled with defaults.
+    /// Ensure all cell lists are sized to width * height and filled with defaults.
     public void EnsureSize(int w, int h, int defaultTileType = 0, int defaultCost = 1)
     {
         width = Mathf.Max(1, w);

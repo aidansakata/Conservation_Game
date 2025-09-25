@@ -1,0 +1,28 @@
+#if UNITY_EDITOR && UNITY_INCLUDE_TESTS
+using NUnit.Framework;
+using UnityEngine;
+using System.IO;
+
+public class LevelJsonValidationTests
+{
+    [Test]
+    public void LevelJson_ArraysMatchDimensions()
+    {
+        var path = Path.Combine(Application.dataPath, "StreamingAssets/Levels/level-1.json");
+        Assert.IsTrue(File.Exists(path), "Missing level-1.json in StreamingAssets/Levels (ensure CI sync or copy one locally).");
+
+        var json = File.ReadAllText(path);
+        var lj = JsonUtility.FromJson<LevelJson>(json);
+
+        int n = lj.width * lj.height;
+        Assert.AreEqual(n, lj.tileTypes.Count, "tileTypes length mismatch");
+        Assert.AreEqual(n, lj.costData.Count, "costData length mismatch");
+        Assert.AreEqual(n, lj.ecoData1.Count, "ecoData1 length mismatch");
+        if (lj.ecoData2 != null) Assert.AreEqual(n, lj.ecoData2.Count, "ecoData2 length mismatch");
+        if (lj.ecoData3 != null) Assert.AreEqual(n, lj.ecoData3.Count, "ecoData3 length mismatch");
+        if (lj.lockedData != null) Assert.AreEqual(n, lj.lockedData.Count, "lockedData length mismatch");
+        if (lj.displayValues != null) Assert.AreEqual(n, lj.displayValues.Count, "displayValues length mismatch");
+        if (lj.optimalData != null) Assert.AreEqual(n, lj.optimalData.Count, "optimalData length mismatch");
+    }
+}
+#endif

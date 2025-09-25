@@ -56,9 +56,12 @@ public class TileFunctions : MonoBehaviour
 
     void Update()
     {
+        // Defensive: ensure GameTiles is present before reading runtime values
+        if (GameTiles.instance == null) return;
+
         // Update score & budget display
-        scoreText.text = GameTiles.instance.score.ToString();
-        budgetText.text = GameTiles.instance.budget.ToString();
+        if (scoreText != null) scoreText.text = GameTiles.instance.score.ToString();
+        if (budgetText != null) budgetText.text = GameTiles.instance.budget.ToString();
 
         // Highlight purchased tiles
         foreach (var kv in GameTiles.instance.tiles)
@@ -90,7 +93,7 @@ public class TileFunctions : MonoBehaviour
             worldPoint.z = 0;
 
             // Look up the tile
-            if (GameTiles.instance.tiles.TryGetValue(worldPoint, out _tile))
+            if (GameTiles.instance.tiles != null && GameTiles.instance.tiles.TryGetValue(worldPoint, out _tile))
             {
                 // Show details in UI
                 _tile.TilemapMember.SetTileFlags(_tile.LocalPlace, TileFlags.None);
@@ -123,8 +126,8 @@ public class TileFunctions : MonoBehaviour
                 GameTiles.instance.selected = _tile;
             }
 
-            // Restore previous tile�s color if needed
-            if (prevPos != worldPoint && GameTiles.instance.tiles.TryGetValue(prevPos, out var prevTile))
+            // Restore previous tile's color if needed
+            if (prevPos != worldPoint && GameTiles.instance.tiles != null && GameTiles.instance.tiles.TryGetValue(prevPos, out var prevTile))
             {
                 if (prevTile.Purchased && !prevTile.Locked)
                     prevTile.TilemapMember.SetColor(prevTile.LocalPlace, Color.magenta);
@@ -138,6 +141,9 @@ public class TileFunctions : MonoBehaviour
 
     private void PurchasedClick()
     {
+        if (GameTiles.instance == null || GameTiles.instance.tiles == null || GameTiles.instance.tiles.Count == 0)
+            return;
+
         var tile = GameTiles.instance.selected;
         if (tile == null) return;
         var tiles = GameTiles.instance.tiles;
