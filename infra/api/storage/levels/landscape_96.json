@@ -201,10 +201,6 @@
     91,
     0
   ],
-  "ecoData2": null,
-  "ecoData3": null,
-  "lockedData": null,
-  "displayValues": null,
   "optimalData": [
     1,
     0,
@@ -270,5 +266,6 @@
     1,
     1,
     1
-  ]
+  ],
+  "optUtil": 815
 }

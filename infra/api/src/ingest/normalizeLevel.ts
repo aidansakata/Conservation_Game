@@ -4,18 +4,16 @@ export interface LevelJson {
   height: number;
   budget: number;
   tileTypes: number[];
-  costData: number[];
-  ecoData1: number[];
-  ecoData2?: number[] | null;
-  ecoData3?: number[] | null;
-  lockedData?: number[] | null;
-  displayValues?: number[] | null;
-  optimalData?: number[] | null;
+  costData: number[];   // defaulted to 1s
+  ecoData1: number[];   // from model.utilities
+  optimalData?: number[] | null; // from model.optimal (0/1 per cell)
+  optUtil?: number | null;       // from model.opt_util (carried through; Unity can ignore)
 }
 
 export interface CatalogEntry { id: string; width: number; height: number; budget: number; path: string }
 export interface Catalog { levels: CatalogEntry[] }
 
+// IMPORTANT: Keep this order in sync with Unity's PaintTiles mapping.
 const TYPE_MAP: Record<string, number> = {
   habitat: 0,
   city: 1,
@@ -26,7 +24,7 @@ const TYPE_MAP: Record<string, number> = {
   road: 6,
 };
 
-function asInt(v: any) { return Number.isFinite(v) ? Number(v) : 0; }
+const asInt = (v: any) => (Number.isFinite(v) ? Number(v) : 0);
 
 export function normalizeModelJsonToLevelJsons(model: any): { key: string; level: LevelJson }[] {
   if (!model || typeof model !== 'object') throw new Error('invalid_model');
@@ -37,12 +35,14 @@ export function normalizeModelJsonToLevelJsons(model: any): { key: string; level
     const block = model[key];
     if (!block || typeof block !== 'object') continue;
 
+    // Only read the whitelisted fields from the model JSON
     const types = block.types ?? {};
     const utilities = block.utilities ?? {};
     const optimal = block.optimal ?? {};
     const budget = asInt(block.budget ?? 0);
+    const optUtil = block.opt_util != null ? asInt(block.opt_util) : null;
 
-    // find max numeric key in types
+    // infer grid size from the largest numeric key in "types"
     let maxKey = 0;
     for (const k of Object.keys(types)) {
       const ik = Number(k);
@@ -53,22 +53,25 @@ export function normalizeModelJsonToLevelJsons(model: any): { key: string; level
     if (!Number.isInteger(n)) throw new Error(`invalid_dimensions_for_${key}: maxKey ${maxKey} not a perfect square`);
     const size = n * n;
 
-    // Build arrays length size; fill defaults
+    // allocate arrays
     const tileTypes = new Array<number>(size).fill(0);
     const costData = new Array<number>(size).fill(1);
     const ecoData1 = new Array<number>(size).fill(0);
     const optimalData = new Array<number>(size).fill(0);
 
-    // Populate from 1-based keys -> index k-1
+    // populate from 1-based keys -> index (k-1)
     for (let i = 1; i <= size; i++) {
       const idx = i - 1;
+
       const t = types[String(i)];
       if (t != null) {
         const ti = typeof t === 'string' ? (TYPE_MAP[t] ?? 0) : Number(t);
         tileTypes[idx] = Number.isFinite(ti) ? ti : 0;
       }
+
       const u = utilities[String(i)];
       if (u != null) ecoData1[idx] = asInt(u);
+
       const o = optimal[String(i)];
       if (o != null) optimalData[idx] = o ? 1 : 0;
     }
@@ -77,15 +80,12 @@ export function normalizeModelJsonToLevelJsons(model: any): { key: string; level
       schemaVersion: 1,
       width: n,
       height: n,
-      budget: budget,
+      budget,
       tileTypes,
       costData,
       ecoData1,
-      ecoData2: null,
-      ecoData3: null,
-      lockedData: null,
-      displayValues: null,
-      optimalData,
+      optimalData,    // keep, even if zeroes (Unity may ignore)
+      optUtil,        // carried as metadata; safe to ignore in Unity
     };
 
     out.push({ key, level });
@@ -95,6 +95,12 @@ export function normalizeModelJsonToLevelJsons(model: any): { key: string; level
 }
 
 export function buildCatalog(entries: { key: string; level: LevelJson }[]): Catalog {
-  const levels = entries.map((e) => ({ id: e.key, width: e.level.width, height: e.level.height, budget: e.level.budget, path: `/levels/${e.key}.json` }));
+  const levels = entries.map((e) => ({
+    id: e.key,
+    width: e.level.width,
+    height: e.level.height,
+    budget: e.level.budget,
+    path: `/levels/${e.key}.json`,
+  }));
   return { levels };
 }

@@ -8,36 +8,37 @@ public static class LevelDefinitionMapper
         if (j.schemaVersion != 1)
             Debug.LogWarning($"[LevelDefinitionMapper] Unknown schemaVersion {j.schemaVersion}; proceeding with best-effort mapping.");
 
-        var def = new LevelDefinition();
-        def.width = j.width;
-        def.height = j.height;
-        def.budget = j.budget;
+        var d = new LevelDefinition();
+        d.width = j.width;
+        d.height = j.height;
+        d.budget = j.budget;
 
-        def.EnsureSize(def.width, def.height, defaultTileType: 0, defaultCost: 1);
+        d.EnsureSize(d.width, d.height, defaultTileType: 0, defaultCost: 1);
 
         void CopyList(List<int> src, List<int> dst, string name)
         {
-            if (src == null) return;
+            // Ignore missing OR empty lists to avoid spammy length warnings
+            if (src == null || src.Count == 0) return;
+
             if (src.Count != dst.Count)
                 Debug.LogWarning($"[LevelDefinitionMapper] {name} length {src.Count} != expected {dst.Count}");
+
             int n = Mathf.Min(src.Count, dst.Count);
             for (int i = 0; i < n; i++) dst[i] = src[i];
         }
 
-        CopyList(j.tileTypes, def.tileTypes, nameof(j.tileTypes));
-        CopyList(j.costData, def.costData, nameof(j.costData));
-        CopyList(j.ecoData1, def.ecoData1, nameof(j.ecoData1));
-        if (j.ecoData2 != null) CopyList(j.ecoData2, def.ecoData2, nameof(j.ecoData2));
-        if (j.ecoData3 != null) CopyList(j.ecoData3, def.ecoData3, nameof(j.ecoData3));
-        if (j.lockedData != null) CopyList(j.lockedData, def.lockedData, nameof(j.lockedData));
-        if (j.displayValues != null) CopyList(j.displayValues, def.displayValues, nameof(j.displayValues));
-        if (j.optimalData != null) CopyList(j.optimalData, def.optimalData, nameof(j.optimalData));
+        // required
+        CopyList(j.tileTypes, d.tileTypes, nameof(j.tileTypes));
+        CopyList(j.costData, d.costData, nameof(j.costData));
 
-        // Optional vector lists (only if LevelJson defines them)
-        def.startCluster = j.startCluster ?? def.startCluster;
-        def.endCluster = j.endCluster ?? def.endCluster;
-        def.optimalPath = j.optimalPath ?? def.optimalPath;
+        // map JSON "utilities" -> LevelDefinition.ecoData1
+        CopyList(j.utilities, d.ecoData1, nameof(j.utilities));
 
-        return def;
+        // optional flags (present in your JSON)
+        CopyList(j.optimalData, d.optimalData, nameof(j.optimalData));
+
+        // DO NOT copy ecoData2/3/locked/displayValues anymore
+
+        return d;
     }
 }
