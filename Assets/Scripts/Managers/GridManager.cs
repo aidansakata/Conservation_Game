@@ -95,7 +95,65 @@ public class GridManager : MonoBehaviour
         currentLevelNumber = Mathf.Clamp(levelNumber, 1, 5);
         GameState.SelectedLevel = currentLevelNumber;
 
-        // Try JSON-first. If not present or parse fails, fall back to existing providers.
+        // --- NEW VARIATION LOGIC START ---
+        // If we are loading Level 1, we want to pick a random "landscape_X"
+        if (currentLevelNumber == 1)
+        {
+            var cfg = Resources.Load<ApiConfig>("ApiConfig");
+
+            // 1. Get Base URL (default to 127.0.0.1)
+            string baseUrl = (cfg != null) ? cfg.baseApiUrl : "http://127.0.0.1:4000";
+
+            // CLEANUP: Trim whitespace and trailing slash, but DO NOT add "/levels/"
+            // LevelJsonLoader.cs line 97 adds "/levels/" automatically.
+            baseUrl = baseUrl.Trim().TrimEnd('/');
+
+            // 2. Pick Random Variation (Restored!)
+            int variation = Random.Range(1, 101);
+
+            // 3. Construct ID WITHOUT Extension
+            // LevelJsonLoader.cs adds ".json" automatically.
+            string levelId = $"landscape_{variation}";
+
+            Debug.Log($"[GridManager] Requesting variation: {levelId} from {baseUrl}");
+
+            StartCoroutine(LevelJsonLoader.LoadLevelJsonById(baseUrl, levelId,
+                (json) =>
+                {
+                    try
+                    {
+                        var lj = JsonUtility.FromJson<LevelJson>(json);
+                        var d = LevelDefinitionMapper.FromJson(lj);
+                        PrepareDefinition(d, currentLevelNumber);
+                        def = d;
+
+                        PaintTiles(def);
+                        ApplyToWorldTiles(def);
+
+                        if (showCellValues && valueLabelPrefab != null) SpawnValueLabels(def);
+                        else ClearValueLabels();
+
+                        ConfigureCameraForLevel(currentLevelNumber);
+                        _isLoading = false;
+                        Debug.Log($"[GridManager] Painted {levelId} ({def.width}x{def.height}).");
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogWarning($"JSON parse failed for {levelId}: {ex.Message}. Falling back.");
+                        LoadLevelFallback(currentLevelNumber);
+                    }
+                },
+                (err) =>
+                {
+                    Debug.LogWarning($"Failed to load {levelId} from {baseUrl}: {err}. Falling back.");
+                    LoadLevelFallback(currentLevelNumber);
+                }
+            ));
+            return; // Exit here so we don't run the standard loader below
+        }
+        // --- NEW VARIATION LOGIC END ---
+
+        // Try JSON-first for other levels (standard behavior)
         StartCoroutine(LevelJsonLoader.LoadLevelJson(
             currentLevelNumber,
             onLoaded: (json) =>
@@ -139,7 +197,7 @@ public class GridManager : MonoBehaviour
         {
             candidate = GridLayouts.GetLayout(levelNumber);
         }
-        catch { /* provider not present → ignore */ }
+        catch { /* provider not present -> ignore */ }
 
         // 2) Fallback to nested inspector assignments.
         if (candidate == null)
@@ -186,14 +244,17 @@ public class GridManager : MonoBehaviour
         if (_isLoading) return;
         _isLoading = true;
 
-        StartCoroutine(LevelJsonLoader.LoadLevelJsonById(levelId, (json) =>
+        var cfg = Resources.Load<ApiConfig>("ApiConfig");
+        string baseUrl = (cfg != null) ? cfg.baseApiUrl : "http://localhost:4000/levels/";
+
+        StartCoroutine(LevelJsonLoader.LoadLevelJsonById(baseUrl, levelId, (json) =>
         {
             try
             {
                 var j = JsonUtility.FromJson<LevelJson>(json);
-                var def = LevelDefinitionMapper.FromJson(j);
-                PrepareDefinition(def, -1);
-                def = def;
+                var defLocal = LevelDefinitionMapper.FromJson(j);
+                PrepareDefinition(defLocal, -1);
+                def = defLocal;
 
                 PaintTiles(def);
                 ApplyToWorldTiles(def);

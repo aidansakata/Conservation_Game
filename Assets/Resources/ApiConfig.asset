@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd2d65507eaf75541adf8ace2c449d04, type: 3}
   m_Name: ApiConfig
   m_EditorClassIdentifier: 
-  baseApiUrl: http://localhost:4000
+  baseApiUrl: http://127.0.0.1:4000
