@@ -108,7 +108,7 @@ public class GridManager : MonoBehaviour
             // LevelJsonLoader.cs line 97 adds "/levels/" automatically.
             baseUrl = baseUrl.Trim().TrimEnd('/');
 
-            // 2. Pick Random Variation (Restored!)
+            // 2. Pick Random Variation
             int variation = Random.Range(1, 101);
 
             // 3. Construct ID WITHOUT Extension
@@ -328,15 +328,29 @@ public class GridManager : MonoBehaviour
         for (int y = 0; y < d.height; y++)
             for (int x = 0; x < d.width; x++)
             {
-                int idx = d.Idx(x, y);
-                int tId = (idx < d.tileTypes.Count ? d.tileTypes[idx] : 0);
-                if (tId <= 0 || tId >= typeToTile.Count)
+                // NOTE: We flip Y here (d.height - 1 - y) to match standard "Top-Left Origin" JSON data
+                // against Unity's "Bottom-Left Origin" coordinate system.
+                int jsonRow = (d.height - 1) - y;
+                int idx = jsonRow * d.width + x;
+
+                // Safety: Ensure we don't go out of bounds of the provided data
+                int tId = (idx >= 0 && idx < d.tileTypes.Count ? d.tileTypes[idx] : 0);
+
+                // Allow Element 6 or higher if TypeToTile has them
+                if (tId < 0 || tId >= typeToTile.Count)
                 {
-                    tileArray[idx] = null; // empty
+                    // Map to 0 (idx in tileArray is standard Unity index)
+                    // Note: We populate tileArray using Unity logic (d.Idx for visual placement),
+                    // but we READ from the JSON using the flipped 'idx'.
+                    // Actually, tileArray needs to be flat. 
+                    // Let's use standard visual index for the Array position:
+                    int visualIdx = y * d.width + x;
+                    tileArray[visualIdx] = null; // empty
                 }
                 else
                 {
-                    tileArray[idx] = typeToTile[tId];
+                    int visualIdx = y * d.width + x;
+                    tileArray[visualIdx] = typeToTile[tId];
                 }
             }
 
@@ -369,7 +383,10 @@ public class GridManager : MonoBehaviour
         foreach (var kv in tilesManager.tiles)
         {
             var wTile = kv.Value;
-            int idx = wTile.LocalPlace.y * d.width + wTile.LocalPlace.x;
+
+            // Flip Y here too for data lookup
+            int jsonRow = (d.height - 1) - wTile.LocalPlace.y;
+            int idx = jsonRow * d.width + wTile.LocalPlace.x;
 
             if (idx < 0 || idx >= d.CellCount) continue;
 
@@ -396,7 +413,13 @@ public class GridManager : MonoBehaviour
         for (int y = 0; y < d.height; y++)
             for (int x = 0; x < d.width; x++)
             {
-                int idx = d.Idx(x, y);
+                // Flip Y here for data lookup
+                int jsonRow = (d.height - 1) - y;
+                int idx = jsonRow * d.width + x;
+
+                // Safety check
+                if (idx < 0 || idx >= d.CellCount) continue;
+
                 int val = hasDisplay ? d.displayValues[idx] : (idx < d.ecoData1.Count ? d.ecoData1[idx] : 0);
 
                 var cell = new Vector3Int(x, y, 0);
