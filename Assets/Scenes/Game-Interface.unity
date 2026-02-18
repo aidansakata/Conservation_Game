@@ -480,7 +480,7 @@ PrefabInstance:
       objectReference: {fileID: 1679952749}
     - target: {fileID: 8583787489926874068, guid: 4c3cfe41ce0efef409e9a7e0b47faeb0, type: 3}
       propertyPath: typeToTile.Array.size
-      value: 7
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 8583787489926874068, guid: 4c3cfe41ce0efef409e9a7e0b47faeb0, type: 3}
       propertyPath: typeToTile.Array.data[0]
@@ -489,23 +489,23 @@ PrefabInstance:
     - target: {fileID: 8583787489926874068, guid: 4c3cfe41ce0efef409e9a7e0b47faeb0, type: 3}
       propertyPath: typeToTile.Array.data[1]
       value: 
-      objectReference: {fileID: 11400000, guid: d42866ee06446d5419f0148cbb7d2912, type: 2}
+      objectReference: {fileID: 11400000, guid: f3e0d55a435533249b1ba854d6bd3a1a, type: 2}
     - target: {fileID: 8583787489926874068, guid: 4c3cfe41ce0efef409e9a7e0b47faeb0, type: 3}
       propertyPath: typeToTile.Array.data[2]
       value: 
-      objectReference: {fileID: 11400000, guid: f3e0d55a435533249b1ba854d6bd3a1a, type: 2}
+      objectReference: {fileID: 11400000, guid: 017a854707f807f45a2e7b1f620ff4ba, type: 2}
     - target: {fileID: 8583787489926874068, guid: 4c3cfe41ce0efef409e9a7e0b47faeb0, type: 3}
       propertyPath: typeToTile.Array.data[3]
       value: 
-      objectReference: {fileID: 11400000, guid: 017a854707f807f45a2e7b1f620ff4ba, type: 2}
+      objectReference: {fileID: 11400000, guid: c7d3c932ada99674a8a2e1c305b57c39, type: 2}
     - target: {fileID: 8583787489926874068, guid: 4c3cfe41ce0efef409e9a7e0b47faeb0, type: 3}
       propertyPath: typeToTile.Array.data[4]
       value: 
-      objectReference: {fileID: 11400000, guid: c7d3c932ada99674a8a2e1c305b57c39, type: 2}
+      objectReference: {fileID: 11400000, guid: d42866ee06446d5419f0148cbb7d2912, type: 2}
     - target: {fileID: 8583787489926874068, guid: 4c3cfe41ce0efef409e9a7e0b47faeb0, type: 3}
       propertyPath: typeToTile.Array.data[5]
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 11400000, guid: 3b0aeba4910580e47bd82eb0c3714b53, type: 2}
     - target: {fileID: 8583787489926874068, guid: 4c3cfe41ce0efef409e9a7e0b47faeb0, type: 3}
       propertyPath: typeToTile.Array.data[6]
       value: 
