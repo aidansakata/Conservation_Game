@@ -6,45 +6,21 @@ using UnityEngine.EventSystems;
 
 public class TileFunctions : MonoBehaviour
 {
-    private WorldTile _tile;
     public Tilemap Tilemap;
-    [SerializeField] private Grid grid;
-    private Vector3Int prevPos;
 
-    [Header("UI References")]
-    [SerializeField] private Text tileTypeText;
+    [Header("Global UI References")]
+    [SerializeField] private Text scoreText;
     [SerializeField] private Text budgetText;
-    [SerializeField] private Text purchaseButtonText;
-    [SerializeField] private Button purchButton;
+
+    [Header("Global Buttons")]
     [SerializeField] private Button resetButton;
     [SerializeField] private Button submitButton;
-    [SerializeField] private Button hintButton; // ADDED
-    [SerializeField] private GameObject menu;
-    [SerializeField] private Text scoreText;
-    [SerializeField] private Text priceValText;
-    [SerializeField] private Text ecoVal1Text;
-    [SerializeField] private Text ecoVal2Text;
-    [SerializeField] private Text ecoVal3Text;
-    [SerializeField] private Text bonusValText;
-
-    private Rect menuRect;
+    [SerializeField] private Button hintButton;
 
     void Start()
     {
-        // 1. DEBUG: Check if Score Text is actually assigned
-        if (scoreText == null)
-        {
-            Debug.LogError("CRITICAL ERROR: 'scoreText' is NULL in TileFunctions! Drag the Score Text object into the Inspector slot.");
-        }
-
-        // Cache the menu Rect for click-zone testing
-        if (menu != null)
-            menuRect = menu.GetComponent<RectTransform>().rect;
-
-        if (purchButton != null) purchButton.onClick.AddListener(PurchasedClick);
         if (resetButton != null) resetButton.onClick.AddListener(ResetClick);
 
-        // --- UPDATED SUBMIT LOGIC ---
         if (submitButton != null)
         {
             submitButton.onClick.AddListener(() => {
@@ -53,7 +29,6 @@ public class TileFunctions : MonoBehaviour
             });
         }
 
-        // --- ADDED HINT LOGIC ---
         if (hintButton != null)
         {
             hintButton.onClick.AddListener(() => {
@@ -62,7 +37,6 @@ public class TileFunctions : MonoBehaviour
             });
         }
 
-        // Auto-assign Tilemap if not set in Inspector
         if (Tilemap == null)
         {
             var gt = GameTiles.instance ?? FindObjectOfType<GameTiles>();
@@ -80,152 +54,109 @@ public class TileFunctions : MonoBehaviour
 
     void Update()
     {
-        // Defensive: ensure GameTiles is present before reading runtime values
         if (GameTiles.instance == null) return;
 
-        // Update score & budget display
-        if (scoreText != null)
-            scoreText.text = GameTiles.instance.score.ToString();
+        if (scoreText != null) scoreText.text = GameTiles.instance.score.ToString();
+        if (budgetText != null) budgetText.text = GameTiles.instance.budget.ToString();
 
-        if (budgetText != null)
-            budgetText.text = GameTiles.instance.budget.ToString();
-
-        // Highlight purchased tiles
+        // FORCE COLOR UPDATE LOOP
+        // We add the Flag Unlock here to ensure existing tiles get unlocked if missed
         foreach (var kv in GameTiles.instance.tiles)
         {
             var t = kv.Value;
             if (t.Purchased && !t.Locked)
+            {
+                // CRITICAL FIX: Unlock the tile so we can color it
+                t.TilemapMember.SetTileFlags(t.LocalPlace, TileFlags.None);
                 t.TilemapMember.SetColor(t.LocalPlace, Color.magenta);
+            }
         }
 
-        // Handle mouse clicks outside the UI panel
-        if (Tilemap == null) return; // cannot select without a Tilemap reference
-        if (!EventSystem.current.IsPointerOverGameObject() && Input.GetMouseButtonDown(0))
+        if (Tilemap == null) return;
+
+        if (Input.GetMouseButtonDown(0) && !EventSystem.current.IsPointerOverGameObject())
         {
-            Vector2 localPoint;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                menu.GetComponent<RectTransform>(),
-                Input.mousePosition,
-                Camera.main,
-                out localPoint
-            );
-
-            // If click was inside the menu, bail out
-            if (menuRect.Contains(localPoint)) return;
-
-            // Convert click to cell coords
-            var worldPoint = Tilemap.WorldToCell(
-                Camera.main.ScreenToWorldPoint(Input.mousePosition)
-            );
-            worldPoint.z = 0;
-
-            // Look up the tile
-            if (GameTiles.instance.tiles != null && GameTiles.instance.tiles.TryGetValue(worldPoint, out _tile))
-            {
-                // Show details in UI
-                _tile.TilemapMember.SetTileFlags(_tile.LocalPlace, TileFlags.None);
-                if (tileTypeText != null) tileTypeText.text = _tile.Name;
-                if (priceValText != null) priceValText.text = _tile.Cost.ToString();
-                if (ecoVal1Text != null) ecoVal1Text.text = _tile.ecoVal.ToString();
-                if (ecoVal2Text != null) ecoVal2Text.text = _tile.ecoVal2.ToString();
-                if (ecoVal3Text != null) ecoVal3Text.text = _tile.ecoVal3.ToString();
-                if (bonusValText != null) bonusValText.text = _tile.bonus.ToString();
-
-                // Color feedback
-                _tile.TilemapMember.SetColor(_tile.LocalPlace, Color.green);
-
-                if (purchButton != null && purchaseButtonText != null)
-                {
-                    if (_tile.Locked)
-                    {
-                        purchaseButtonText.text = "Locked";
-                        purchButton.enabled = false;
-                    }
-                    else if (_tile.Purchased)
-                    {
-                        purchaseButtonText.text = "Sell";
-                        purchButton.enabled = true;
-                    }
-                    else
-                    {
-                        purchaseButtonText.text = "Purchase";
-                        purchButton.enabled = true;
-                    }
-                }
-
-                // Mark as the selected tile
-                GameTiles.instance.selected = _tile;
-            }
-
-            // Restore previous tile's color if needed
-            if (prevPos != worldPoint && GameTiles.instance.tiles != null && GameTiles.instance.tiles.TryGetValue(prevPos, out var prevTile))
-            {
-                if (prevTile.Purchased && !prevTile.Locked)
-                    prevTile.TilemapMember.SetColor(prevTile.LocalPlace, Color.magenta);
-                else
-                    prevTile.TilemapMember.SetColor(prevTile.LocalPlace, Color.white);
-            }
-
-            prevPos = worldPoint;
+            HandleTileClick();
         }
     }
 
-    private void PurchasedClick()
+    private void HandleTileClick()
     {
-        if (GameTiles.instance == null || GameTiles.instance.tiles == null || GameTiles.instance.tiles.Count == 0)
-            return;
+        Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector3Int cellPos = Tilemap.WorldToCell(mouseWorldPos);
+        cellPos.z = 0;
 
-        var tile = GameTiles.instance.selected;
-        if (tile == null) return;
+        if (GameTiles.instance.tiles != null && GameTiles.instance.tiles.TryGetValue(cellPos, out WorldTile tile))
+        {
+            TogglePurchase(tile);
+        }
+    }
+
+    private void TogglePurchase(WorldTile tile)
+    {
+        if (tile.Locked) return;
+
+        List<Vector3Int> neighbors = GetNeighborPositions(tile.LocalPlace);
         var tiles = GameTiles.instance.tiles;
 
-        // Compute neighbor list according to hex parity
-        List<Vector3Int> neighbors = GetNeighborPositions(tile.LocalPlace);
+        // CRITICAL FIX: Unlock flags immediately upon interaction
+        tile.TilemapMember.SetTileFlags(tile.LocalPlace, TileFlags.None);
 
-        // Purchase
-        if ((!tile.Purchased && !tile.Locked) && tile.Cost >= 0 && tile.Cost <= GameTiles.instance.budget)
+        // CASE 1: BUY
+        if (!tile.Purchased)
         {
-            tile.TilemapMember.SetColor(tile.LocalPlace, Color.magenta);
-            tile.Purchased = true;
-            int ecoSum = tile.ecoVal + tile.ecoVal2 + tile.ecoVal3;
-            int tileValue = ecoSum + tile.bonus;
-
-            // 2. DEBUG: Check Values before adding
-            Debug.Log($"[PurchasedClick] Tile: {tile.LocalPlace} | Eco1: {tile.ecoVal} | Eco2: {tile.ecoVal2} | Bonus: {tile.bonus} | TOTAL VALUE: {tileValue}");
-
-            GameTiles.instance.score += tileValue;
-
-            // 3. DEBUG: Check Score after adding
-            Debug.Log($"[PurchasedClick] Score updated to: {GameTiles.instance.score}");
-
-            tile.lastTotal = tileValue;
-            GameTiles.instance.budget -= tile.Cost;
-            GameTiles.instance.boughtTiles[tile.LocalPlace] = tile;
-            if (purchaseButtonText != null) purchaseButtonText.text = "Sell";
-
-            // Apply adjacency bonuses to neighbors (10% of neighbor eco sum)
-            for (int k = 0; k < neighbors.Count; k++)
+            if (tile.Cost <= GameTiles.instance.budget)
             {
-                var nPos = neighbors[k];
-                if (tiles.TryGetValue(nPos, out var nTile) && nTile.Purchased == false)
+                // Visuals
+                tile.TilemapMember.SetColor(tile.LocalPlace, Color.magenta);
+                tile.Purchased = true;
+
+                // Math
+                int ecoSum = tile.ecoVal + tile.ecoVal2 + tile.ecoVal3;
+                int tileValue = ecoSum + tile.bonus;
+
+                GameTiles.instance.score += tileValue;
+                tile.lastTotal = tileValue;
+
+                GameTiles.instance.budget -= tile.Cost;
+
+                GameTiles.instance.boughtTiles[tile.LocalPlace] = tile;
+
+                Debug.Log($"Bought {tile.LocalPlace}. Score +{tileValue}. Budget remaining: {GameTiles.instance.budget}");
+
+                // Neighbors
+                for (int k = 0; k < neighbors.Count; k++)
                 {
-                    tile.applyBonus[k] = true;
-                    int nEcoSum = nTile.ecoVal + nTile.ecoVal2 + nTile.ecoVal3;
-                    nTile.bonus += (int)(nEcoSum * 0.1f);
+                    var nPos = neighbors[k];
+                    if (tiles.TryGetValue(nPos, out var nTile) && nTile.Purchased == false)
+                    {
+                        tile.applyBonus[k] = true;
+                        int nEcoSum = nTile.ecoVal + nTile.ecoVal2 + nTile.ecoVal3;
+                        nTile.bonus += (int)(nEcoSum * 0.1f);
+                    }
                 }
             }
+            else
+            {
+                Debug.Log("Not enough budget to purchase tile!");
+            }
         }
-        // Sell
-        else if (tile.Purchased && !tile.Locked)
+        // CASE 2: SELL
+        else
         {
+            // Visuals
             tile.TilemapMember.SetColor(tile.LocalPlace, Color.white);
             tile.Purchased = false;
+
+            // Math
             GameTiles.instance.score -= tile.lastTotal;
             GameTiles.instance.budget += tile.Cost;
-            GameTiles.instance.boughtTiles.Remove(tile.LocalPlace);
-            if (purchaseButtonText != null) purchaseButtonText.text = "Purchase";
 
-            // Remove adjacency bonuses that were applied by this tile
+            GameTiles.instance.boughtTiles.Remove(tile.LocalPlace);
+
+            Debug.Log($"Sold {tile.LocalPlace}. Score -{tile.lastTotal}. Budget restored.");
+
+            // Neighbors
             for (int k = 0; k < neighbors.Count; k++)
             {
                 if (!tile.applyBonus[k]) continue;
@@ -253,24 +184,24 @@ public class TileFunctions : MonoBehaviour
         {
             return new List<Vector3Int>
             {
-                new Vector3Int(center.x + 1, center.y - 1, 0), // idx 0
-                new Vector3Int(center.x + 1, center.y + 0, 0), // idx 1
-                new Vector3Int(center.x + 0, center.y + 1, 0), // idx 2
-                new Vector3Int(center.x - 1, center.y + 0, 0), // idx 3
-                new Vector3Int(center.x - 1, center.y - 1, 0), // idx 4
-                new Vector3Int(center.x + 0, center.y - 1, 0), // idx 5
+                new Vector3Int(center.x + 1, center.y - 1, 0),
+                new Vector3Int(center.x + 1, center.y + 0, 0),
+                new Vector3Int(center.x + 0, center.y + 1, 0),
+                new Vector3Int(center.x - 1, center.y + 0, 0),
+                new Vector3Int(center.x - 1, center.y - 1, 0),
+                new Vector3Int(center.x + 0, center.y - 1, 0),
             };
         }
         else
         {
             return new List<Vector3Int>
             {
-                new Vector3Int(center.x + 1, center.y + 0, 0), // idx 0
-                new Vector3Int(center.x + 1, center.y + 1, 0), // idx 1
-                new Vector3Int(center.x + 0, center.y + 1, 0), // idx 2
-                new Vector3Int(center.x - 1, center.y + 1, 0), // idx 3
-                new Vector3Int(center.x - 1, center.y + 0, 0), // idx 4
-                new Vector3Int(center.x + 0, center.y - 1, 0), // idx 5
+                new Vector3Int(center.x + 1, center.y + 0, 0),
+                new Vector3Int(center.x + 1, center.y + 1, 0),
+                new Vector3Int(center.x + 0, center.y + 1, 0),
+                new Vector3Int(center.x - 1, center.y + 1, 0),
+                new Vector3Int(center.x - 1, center.y + 0, 0),
+                new Vector3Int(center.x + 0, center.y - 1, 0),
             };
         }
     }
