@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.Tilemaps;
 using System.Collections.Generic;
-using TMPro; // for value labels
+using TMPro;
+using System.Text.RegularExpressions; // Required for manual parsing
 
 public class GridManager : MonoBehaviour
 {
@@ -57,10 +58,7 @@ public class GridManager : MonoBehaviour
                 StartCoroutine(LevelJsonLoader.LoadLevelJsonById(baseUrl, GameState.SelectedLevelId, (json) => {
                     try
                     {
-                        var j = JsonUtility.FromJson<LevelJson>(json);
-                        var defLocal = LevelDefinitionMapper.FromJson(j);
-                        PrepareDefinition(defLocal, -1);
-                        LoadComplete(defLocal, -1);
+                        ProcessLoadedJson(json);
                     }
                     catch (System.Exception ex)
                     {
@@ -115,14 +113,7 @@ public class GridManager : MonoBehaviour
             StartCoroutine(LevelJsonLoader.LoadLevelJsonById(baseUrl, levelId,
                 (json) =>
                 {
-                    try
-                    {
-                        var lj = JsonUtility.FromJson<LevelJson>(json);
-                        var d = LevelDefinitionMapper.FromJson(lj);
-                        PrepareDefinition(d, currentLevelNumber);
-                        LoadComplete(d, currentLevelNumber);
-                        Debug.Log($"[GridManager] Painted {levelId} ({d.width}x{d.height}).");
-                    }
+                    try { ProcessLoadedJson(json); }
                     catch (System.Exception ex)
                     {
                         Debug.LogWarning($"JSON parse failed for {levelId}: {ex.Message}. Falling back.");
@@ -139,19 +130,12 @@ public class GridManager : MonoBehaviour
         }
         // --- NEW VARIATION LOGIC END ---
 
-        // Try JSON-first for other levels (standard behavior)
+        // Standard JSON load
         StartCoroutine(LevelJsonLoader.LoadLevelJson(
             currentLevelNumber,
             onLoaded: (json) =>
             {
-                try
-                {
-                    var lj = JsonUtility.FromJson<LevelJson>(json);
-                    var d = LevelDefinitionMapper.FromJson(lj);
-                    PrepareDefinition(d, currentLevelNumber);
-                    LoadComplete(d, currentLevelNumber);
-                    Debug.Log($"[GridManager] Painted (from JSON) {d.width}x{d.height} (level {currentLevelNumber}).");
-                }
+                try { ProcessLoadedJson(json); }
                 catch (System.Exception ex)
                 {
                     Debug.LogWarning($"JSON parse failed for level {currentLevelNumber}: {ex.Message}. Falling back.");
@@ -164,6 +148,49 @@ public class GridManager : MonoBehaviour
                 LoadLevelFallback(currentLevelNumber);
             }
         ));
+    }
+
+    // --- NEW HELPER: Centralized JSON Processing ---
+    private void ProcessLoadedJson(string json)
+    {
+        var lj = JsonUtility.FromJson<LevelJson>(json);
+        var d = LevelDefinitionMapper.FromJson(lj);
+
+        // --- MANUAL DATA RECOVERY ---
+        // If EcoData is 0/Empty (due to serialization bugs), parse it manually from the text.
+        if (d.ecoData1 == null || d.ecoData1.Count == 0 || (d.ecoData1.Count > 0 && d.ecoData1[1] == 0))
+        {
+            Debug.LogWarning("EcoData1 appears empty/zero. Attempting Manual Parse...");
+            d.ecoData1 = ManualParseList(json, "\"ecoData1\"");
+            Debug.Log($"Manual Parse Result: {d.ecoData1.Count} items found. Index 1 value: {(d.ecoData1.Count > 1 ? d.ecoData1[1] : -1)}");
+        }
+        // ----------------------------
+
+        PrepareDefinition(d, currentLevelNumber);
+        LoadComplete(d, currentLevelNumber);
+    }
+
+    // Parses a JSON integer array by regex to bypass JsonUtility case-sensitivity
+    private List<int> ManualParseList(string json, string fieldName)
+    {
+        List<int> result = new List<int>();
+        // Find "fieldName": [ ... ]
+        int startIdx = json.IndexOf(fieldName);
+        if (startIdx == -1) return result;
+
+        int arrayStart = json.IndexOf('[', startIdx);
+        int arrayEnd = json.IndexOf(']', arrayStart);
+        if (arrayStart == -1 || arrayEnd == -1) return result;
+
+        string content = json.Substring(arrayStart + 1, arrayEnd - arrayStart - 1);
+        string[] parts = content.Split(',');
+
+        foreach (var p in parts)
+        {
+            if (int.TryParse(p.Trim(), out int val))
+                result.Add(val);
+        }
+        return result;
     }
 
     private void LoadLevelFallback(int levelNumber)
@@ -217,13 +244,7 @@ public class GridManager : MonoBehaviour
 
         StartCoroutine(LevelJsonLoader.LoadLevelJsonById(baseUrl, levelId, (json) =>
         {
-            try
-            {
-                var j = JsonUtility.FromJson<LevelJson>(json);
-                var defLocal = LevelDefinitionMapper.FromJson(j);
-                PrepareDefinition(defLocal, -1);
-                LoadComplete(defLocal, -1);
-            }
+            try { ProcessLoadedJson(json); }
             catch (System.Exception ex)
             {
                 Debug.LogWarning($"JSON parse failed for level id {levelId}: {ex.Message}. Falling back.");
@@ -243,6 +264,13 @@ public class GridManager : MonoBehaviour
     {
         def = d;
 
+        // DEBUG: Verify Data Integrity
+        int ecoCount = (def.ecoData1 != null) ? def.ecoData1.Count : 0;
+
+        Debug.Log($"[LoadComplete] Level Data Loaded. EcoData1 Count: {ecoCount}, Budget (Tile Limit): {d.budget}");
+
+        if (ecoCount == 0) Debug.LogError("CRITICAL: EcoData1 is EMPTY. Tiles will have 0 Value.");
+
         // 1. Initialize Unity Visuals
         PaintTiles(def);
         ApplyToWorldTiles(def);
@@ -260,7 +288,7 @@ public class GridManager : MonoBehaviour
     private void InitializeLogicGrid(LevelDefinition d)
     {
         // Create the logic object
-        logicGrid = new HexagonGrid(d.width); // Assuming square grid based on logic scripts
+        logicGrid = new HexagonGrid(d.width);
 
         // Loop through data and populate the Logic Hexes
         for (int y = 0; y < d.height; y++)
@@ -268,15 +296,12 @@ public class GridManager : MonoBehaviour
             for (int x = 0; x < d.width; x++)
             {
                 // CONVERSION: Unity (0,0) is Bottom-Left. JSON (0,0) is Top-Left.
-                // We must match the "PaintTiles" flip logic so we grab the correct data index.
                 int jsonRow = (d.height - 1) - y;
                 int idx = jsonRow * d.width + x;
 
                 if (idx < 0 || idx >= d.CellCount) continue;
 
                 // Get the logic hex
-                // IMPORTANT: Logic Grid now uses UNITY Coords (x, y) directly.
-                // This ensures Logic neighbors match Visual neighbors.
                 var hex = logicGrid.GetHexByCoords(x, y);
 
                 if (hex != null)
@@ -288,8 +313,6 @@ public class GridManager : MonoBehaviour
                     // Identify Type string for logic checks (habitat vs others)
                     int tId = (idx < d.tileTypes.Count) ? d.tileTypes[idx] : 0;
 
-                    // Assuming Element 0 is Habitat based on your requirement
-                    // Also checking 2 just in case legacy data uses it, but 0 is priority.
                     if (tId == 0) hex.Type = "habitat";
                     else hex.Type = "terrain";
                 }
@@ -304,7 +327,6 @@ public class GridManager : MonoBehaviour
     {
         if (logicGrid == null || tilesManager == null) return;
 
-        // 1. Gather Purchased Tiles (Pass Unity Coords directly)
         List<(int col, int row)> purchased = new List<(int, int)>();
 
         foreach (var kv in tilesManager.boughtTiles)
@@ -313,21 +335,15 @@ public class GridManager : MonoBehaviour
             purchased.Add((pos.x, pos.y));
         }
 
-        // 2. Ask Logic for Hint
         try
         {
             var hintTuple = logicGrid.GetHint(purchased); // Returns (col, row)
-
-            // 3. Use result directly as Unity Coords
             Vector3Int hintPos = new Vector3Int(hintTuple.col, hintTuple.row, 0);
 
-            // 4. Visual Feedback
             Debug.Log($"Hint suggested at: {hintPos}");
 
-            // Highlight/Flash the tile
             if (tilesManager.tiles.TryGetValue(hintPos, out WorldTile tile))
             {
-                // Visual Feedback: Spawn a label "HINT"
                 if (valueLabelPrefab != null)
                 {
                     var label = Instantiate(valueLabelPrefab, labelsParent ? labelsParent : transform);
@@ -335,9 +351,8 @@ public class GridManager : MonoBehaviour
                     label.text = "HINT";
                     label.color = Color.yellow;
                     label.fontSize = 6;
-                    Destroy(label.gameObject, 3f); // Disappear after 3s
+                    Destroy(label.gameObject, 3f);
                 }
-                // Simple feedback: Turn it yellow
                 tile.TilemapMember.SetColor(tile.LocalPlace, Color.yellow);
             }
         }
@@ -351,7 +366,6 @@ public class GridManager : MonoBehaviour
     {
         if (logicGrid == null || tilesManager == null) return;
 
-        // 1. Gather Purchased (Pass Unity Coords directly)
         List<(int col, int row)> purchased = new List<(int, int)>();
         foreach (var kv in tilesManager.boughtTiles)
         {
@@ -359,13 +373,11 @@ public class GridManager : MonoBehaviour
             purchased.Add((pos.x, pos.y));
         }
 
-        // 2. Check Logic
         var (isConnected, visited) = logicGrid.isValidCorridor(purchased);
 
         if (isConnected)
         {
             Debug.Log($"WIN! Corridor Connected. Score: {tilesManager.score}");
-            // Trigger Win UI logic here
         }
         else
         {
@@ -377,7 +389,6 @@ public class GridManager : MonoBehaviour
 
     private void PrepareDefinition(LevelDefinition d, int levelNumber)
     {
-        // If width/height are zero, set reasonable defaults.
         if (d.width <= 0 || d.height <= 0)
         {
             if (levelNumber == 1) { d.width = 8; d.height = 8; }
@@ -387,8 +398,6 @@ public class GridManager : MonoBehaviour
 
         d.EnsureSize(d.width, d.height, defaultTileType: 1, defaultCost: 1);
 
-        // If tileTypes look empty (all zeros/ones from Ensure), stamp a distinct pattern
-        // so each level *visibly* differs without hand-editing.
         bool looksEmpty = true;
         int n = d.CellCount;
         for (int i = 0; i < n; i++) { if (d.tileTypes[i] != 0 && d.tileTypes[i] != 1) { looksEmpty = false; break; } }
@@ -397,18 +406,10 @@ public class GridManager : MonoBehaviour
         {
             switch (levelNumber)
             {
-                case 1: // checker: 1 vs 2
-                    d.Fill((x, y, w, h) => ((x + y) % 2 == 0) ? 1 : 2);
-                    break;
-                case 2: // vertical river stripe: 2 through middle, 1 elsewhere
-                    d.Fill((x, y, w, h) => (x == w / 2) ? 2 : 1);
-                    break;
-                case 3: // road diagonals: 3; background 1
-                    d.Fill((x, y, w, h) => (x == y || x == (w - 1 - y)) ? 3 : 1);
-                    break;
-                default:
-                    d.Fill((x, y, w, h) => 1);
-                    break;
+                case 1: d.Fill((x, y, w, h) => ((x + y) % 2 == 0) ? 1 : 2); break;
+                case 2: d.Fill((x, y, w, h) => (x == w / 2) ? 2 : 1); break;
+                case 3: d.Fill((x, y, w, h) => (x == y || x == (w - 1 - y)) ? 3 : 1); break;
+                default: d.Fill((x, y, w, h) => 1); break;
             }
         }
     }
@@ -423,30 +424,17 @@ public class GridManager : MonoBehaviour
         for (int y = 0; y < d.height; y++)
             for (int x = 0; x < d.width; x++)
             {
-                // NOTE: We flip Y here (d.height - 1 - y) to match standard "Top-Left Origin" JSON data
-                // against Unity's "Bottom-Left Origin" coordinate system.
                 int jsonRow = (d.height - 1) - y;
                 int idx = jsonRow * d.width + x;
-
-                // Safety: Ensure we don't go out of bounds of the provided data
                 int tId = (idx >= 0 && idx < d.tileTypes.Count ? d.tileTypes[idx] : 0);
+                int visualIdx = y * d.width + x;
 
-                // Allow Element 6 or higher if TypeToTile has them
-                if (tId < 0 || tId >= typeToTile.Count)
-                {
-                    int visualIdx = y * d.width + x;
-                    tileArray[visualIdx] = null; // empty
-                }
-                else
-                {
-                    int visualIdx = y * d.width + x;
-                    tileArray[visualIdx] = typeToTile[tId];
-                }
+                if (tId < 0 || tId >= typeToTile.Count) tileArray[visualIdx] = null;
+                else tileArray[visualIdx] = typeToTile[tId];
             }
 
-        var region = new BoundsInt(0, 0, 0, d.width, d.height, 1);
         tilemap.ClearAllTiles();
-        tilemap.SetTilesBlock(region, tileArray);
+        tilemap.SetTilesBlock(new BoundsInt(0, 0, 0, d.width, d.height, 1), tileArray);
         tilemap.RefreshAllTiles();
         tilemap.CompressBounds();
     }
@@ -466,26 +454,31 @@ public class GridManager : MonoBehaviour
 
         tilesManager.RebuildFromTilemap(tilemap ?? tilesManager.Tilemap);
 
+        // --- UPDATED LOGIC ---
+        // 1. Budget = Number of tiles allowed (from JSON 'budget')
         tilesManager.budget = d.budget;
         tilesManager.score = 0;
         tilesManager.boughtTiles.Clear();
 
+        Debug.Log($"[ApplyToWorldTiles] Budget set to {tilesManager.budget} tiles.");
+
         foreach (var kv in tilesManager.tiles)
         {
             var wTile = kv.Value;
-
-            // Flip Y here too for data lookup
             int jsonRow = (d.height - 1) - wTile.LocalPlace.y;
             int idx = jsonRow * d.width + wTile.LocalPlace.x;
 
             if (idx < 0 || idx >= d.CellCount) continue;
 
-            wTile.Cost = (idx < d.costData.Count ? d.costData[idx] : 1);
-            wTile.ecoVal = (idx < d.ecoData1.Count ? d.ecoData1[idx] : 0);
-            wTile.ecoVal2 = (idx < d.ecoData2.Count ? d.ecoData2[idx] : 0);
-            wTile.ecoVal3 = (idx < d.ecoData3.Count ? d.ecoData3[idx] : 0);
+            // 2. Cost = 1 (Each tile costs 1 "unit" of budget)
+            wTile.Cost = 1;
 
-            if (idx < d.lockedData.Count && d.lockedData[idx] > 0)
+            // 3. Eco Value = Data from JSON (Score gained when bought)
+            wTile.ecoVal = (d.ecoData1 != null && idx < d.ecoData1.Count) ? d.ecoData1[idx] : 0;
+            wTile.ecoVal2 = (d.ecoData2 != null && idx < d.ecoData2.Count) ? d.ecoData2[idx] : 0;
+            wTile.ecoVal3 = (d.ecoData3 != null && idx < d.ecoData3.Count) ? d.ecoData3[idx] : 0;
+
+            if (d.lockedData != null && idx < d.lockedData.Count && d.lockedData[idx] > 0)
             {
                 wTile.Purchased = wTile.Locked = true;
                 tilesManager.boughtTiles[wTile.LocalPlace] = wTile;
@@ -497,23 +490,16 @@ public class GridManager : MonoBehaviour
     private void SpawnValueLabels(LevelDefinition d)
     {
         ClearValueLabels();
-
         bool hasDisplay = d.displayValues != null && d.displayValues.Count == d.CellCount;
-
         for (int y = 0; y < d.height; y++)
             for (int x = 0; x < d.width; x++)
             {
-                // Flip Y here for data lookup
                 int jsonRow = (d.height - 1) - y;
                 int idx = jsonRow * d.width + x;
-
                 if (idx < 0 || idx >= d.CellCount) continue;
-
                 int val = hasDisplay ? d.displayValues[idx] : (idx < d.ecoData1.Count ? d.ecoData1[idx] : 0);
-
                 var cell = new Vector3Int(x, y, 0);
                 var world = tilemap.GetCellCenterWorld(cell);
-
                 var label = Instantiate(valueLabelPrefab, labelsParent ? labelsParent : transform);
                 label.transform.position = world;
                 label.text = val.ToString();

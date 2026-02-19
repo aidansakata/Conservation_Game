@@ -31,6 +31,12 @@ public class TileFunctions : MonoBehaviour
 
     void Start()
     {
+        // 1. DEBUG: Check if Score Text is actually assigned
+        if (scoreText == null)
+        {
+            Debug.LogError("CRITICAL ERROR: 'scoreText' is NULL in TileFunctions! Drag the Score Text object into the Inspector slot.");
+        }
+
         // Cache the menu Rect for click-zone testing
         if (menu != null)
             menuRect = menu.GetComponent<RectTransform>().rect;
@@ -78,8 +84,11 @@ public class TileFunctions : MonoBehaviour
         if (GameTiles.instance == null) return;
 
         // Update score & budget display
-        if (scoreText != null) scoreText.text = GameTiles.instance.score.ToString();
-        if (budgetText != null) budgetText.text = GameTiles.instance.budget.ToString();
+        if (scoreText != null)
+            scoreText.text = GameTiles.instance.score.ToString();
+
+        if (budgetText != null)
+            budgetText.text = GameTiles.instance.budget.ToString();
 
         // Highlight purchased tiles
         foreach (var kv in GameTiles.instance.tiles)
@@ -180,7 +189,15 @@ public class TileFunctions : MonoBehaviour
             tile.Purchased = true;
             int ecoSum = tile.ecoVal + tile.ecoVal2 + tile.ecoVal3;
             int tileValue = ecoSum + tile.bonus;
+
+            // 2. DEBUG: Check Values before adding
+            Debug.Log($"[PurchasedClick] Tile: {tile.LocalPlace} | Eco1: {tile.ecoVal} | Eco2: {tile.ecoVal2} | Bonus: {tile.bonus} | TOTAL VALUE: {tileValue}");
+
             GameTiles.instance.score += tileValue;
+
+            // 3. DEBUG: Check Score after adding
+            Debug.Log($"[PurchasedClick] Score updated to: {GameTiles.instance.score}");
+
             tile.lastTotal = tileValue;
             GameTiles.instance.budget -= tile.Cost;
             GameTiles.instance.boughtTiles[tile.LocalPlace] = tile;
