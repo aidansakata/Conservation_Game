@@ -18,12 +18,13 @@ public class TileFunctions : MonoBehaviour
     [SerializeField] private Button purchButton;
     [SerializeField] private Button resetButton;
     [SerializeField] private Button submitButton;
+    [SerializeField] private Button hintButton; // ADDED
     [SerializeField] private GameObject menu;
     [SerializeField] private Text scoreText;
     [SerializeField] private Text priceValText;
     [SerializeField] private Text ecoVal1Text;
-    [SerializeField] private Text ecoVal2Text; // optional
-    [SerializeField] private Text ecoVal3Text; // optional
+    [SerializeField] private Text ecoVal2Text;
+    [SerializeField] private Text ecoVal3Text;
     [SerializeField] private Text bonusValText;
 
     private Rect menuRect;
@@ -31,12 +32,29 @@ public class TileFunctions : MonoBehaviour
     void Start()
     {
         // Cache the menu Rect for click-zone testing
-        menuRect = menu.GetComponent<RectTransform>().rect;
-        purchButton.onClick.AddListener(PurchasedClick);
-        resetButton.onClick.AddListener(ResetClick);
-        submitButton.onClick.AddListener(() => {
-            // Placeholder for submit logic (end level, validation, etc.)
-        });
+        if (menu != null)
+            menuRect = menu.GetComponent<RectTransform>().rect;
+
+        if (purchButton != null) purchButton.onClick.AddListener(PurchasedClick);
+        if (resetButton != null) resetButton.onClick.AddListener(ResetClick);
+
+        // --- UPDATED SUBMIT LOGIC ---
+        if (submitButton != null)
+        {
+            submitButton.onClick.AddListener(() => {
+                if (GridManager.instance != null)
+                    GridManager.instance.OnSubmitClicked();
+            });
+        }
+
+        // --- ADDED HINT LOGIC ---
+        if (hintButton != null)
+        {
+            hintButton.onClick.AddListener(() => {
+                if (GridManager.instance != null)
+                    GridManager.instance.OnHintClicked();
+            });
+        }
 
         // Auto-assign Tilemap if not set in Inspector
         if (Tilemap == null)
@@ -97,29 +115,33 @@ public class TileFunctions : MonoBehaviour
             {
                 // Show details in UI
                 _tile.TilemapMember.SetTileFlags(_tile.LocalPlace, TileFlags.None);
-                tileTypeText.text = _tile.Name;
-                priceValText.text = _tile.Cost.ToString();
-                ecoVal1Text.text = _tile.ecoVal.ToString();
+                if (tileTypeText != null) tileTypeText.text = _tile.Name;
+                if (priceValText != null) priceValText.text = _tile.Cost.ToString();
+                if (ecoVal1Text != null) ecoVal1Text.text = _tile.ecoVal.ToString();
                 if (ecoVal2Text != null) ecoVal2Text.text = _tile.ecoVal2.ToString();
                 if (ecoVal3Text != null) ecoVal3Text.text = _tile.ecoVal3.ToString();
-                bonusValText.text = _tile.bonus.ToString();
+                if (bonusValText != null) bonusValText.text = _tile.bonus.ToString();
 
                 // Color feedback
                 _tile.TilemapMember.SetColor(_tile.LocalPlace, Color.green);
-                if (_tile.Locked)
+
+                if (purchButton != null && purchaseButtonText != null)
                 {
-                    purchaseButtonText.text = "Locked";
-                    purchButton.enabled = false;
-                }
-                else if (_tile.Purchased)
-                {
-                    purchaseButtonText.text = "Sell";
-                    purchButton.enabled = true;
-                }
-                else
-                {
-                    purchaseButtonText.text = "Purchase";
-                    purchButton.enabled = true;
+                    if (_tile.Locked)
+                    {
+                        purchaseButtonText.text = "Locked";
+                        purchButton.enabled = false;
+                    }
+                    else if (_tile.Purchased)
+                    {
+                        purchaseButtonText.text = "Sell";
+                        purchButton.enabled = true;
+                    }
+                    else
+                    {
+                        purchaseButtonText.text = "Purchase";
+                        purchButton.enabled = true;
+                    }
                 }
 
                 // Mark as the selected tile
@@ -162,7 +184,7 @@ public class TileFunctions : MonoBehaviour
             tile.lastTotal = tileValue;
             GameTiles.instance.budget -= tile.Cost;
             GameTiles.instance.boughtTiles[tile.LocalPlace] = tile;
-            purchaseButtonText.text = "Sell";
+            if (purchaseButtonText != null) purchaseButtonText.text = "Sell";
 
             // Apply adjacency bonuses to neighbors (10% of neighbor eco sum)
             for (int k = 0; k < neighbors.Count; k++)
@@ -184,7 +206,7 @@ public class TileFunctions : MonoBehaviour
             GameTiles.instance.score -= tile.lastTotal;
             GameTiles.instance.budget += tile.Cost;
             GameTiles.instance.boughtTiles.Remove(tile.LocalPlace);
-            purchaseButtonText.text = "Purchase";
+            if (purchaseButtonText != null) purchaseButtonText.text = "Purchase";
 
             // Remove adjacency bonuses that were applied by this tile
             for (int k = 0; k < neighbors.Count; k++)

@@ -288,6 +288,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 1228311983151096833, guid: 5f69684b53a60324a9ba7687e2ad4d6e, type: 3}
   m_PrefabInstance: {fileID: 149350778}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &149350780 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2113799426861774930, guid: 5f69684b53a60324a9ba7687e2ad4d6e, type: 3}
+  m_PrefabInstance: {fileID: 149350778}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &152707293 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3210469040995112201, guid: 3ca7e894a4c40ba418b464c0c8e76e5b, type: 3}
@@ -485,11 +496,11 @@ PrefabInstance:
     - target: {fileID: 8583787489926874068, guid: 4c3cfe41ce0efef409e9a7e0b47faeb0, type: 3}
       propertyPath: typeToTile.Array.data[0]
       value: 
-      objectReference: {fileID: 11400000, guid: c525c7f9b90f4d940a79c25d2bba217d, type: 2}
+      objectReference: {fileID: 11400000, guid: 1d8e52dfbb9aa0f46b187873958c0f24, type: 2}
     - target: {fileID: 8583787489926874068, guid: 4c3cfe41ce0efef409e9a7e0b47faeb0, type: 3}
       propertyPath: typeToTile.Array.data[1]
       value: 
-      objectReference: {fileID: 11400000, guid: f3e0d55a435533249b1ba854d6bd3a1a, type: 2}
+      objectReference: {fileID: 11400000, guid: 2f09447374ecac84e91e75ad9800d0b9, type: 2}
     - target: {fileID: 8583787489926874068, guid: 4c3cfe41ce0efef409e9a7e0b47faeb0, type: 3}
       propertyPath: typeToTile.Array.data[2]
       value: 
@@ -497,15 +508,15 @@ PrefabInstance:
     - target: {fileID: 8583787489926874068, guid: 4c3cfe41ce0efef409e9a7e0b47faeb0, type: 3}
       propertyPath: typeToTile.Array.data[3]
       value: 
-      objectReference: {fileID: 11400000, guid: c7d3c932ada99674a8a2e1c305b57c39, type: 2}
+      objectReference: {fileID: 11400000, guid: 9dd46c1cc563dd64b9d503a4a56e2585, type: 2}
     - target: {fileID: 8583787489926874068, guid: 4c3cfe41ce0efef409e9a7e0b47faeb0, type: 3}
       propertyPath: typeToTile.Array.data[4]
       value: 
-      objectReference: {fileID: 11400000, guid: d42866ee06446d5419f0148cbb7d2912, type: 2}
+      objectReference: {fileID: 11400000, guid: 76b14194b58dee54c9c547101cf51999, type: 2}
     - target: {fileID: 8583787489926874068, guid: 4c3cfe41ce0efef409e9a7e0b47faeb0, type: 3}
       propertyPath: typeToTile.Array.data[5]
       value: 
-      objectReference: {fileID: 11400000, guid: 3b0aeba4910580e47bd82eb0c3714b53, type: 2}
+      objectReference: {fileID: 11400000, guid: 931fd0608bb91904fa3ab7e558186bb3, type: 2}
     - target: {fileID: 8583787489926874068, guid: 4c3cfe41ce0efef409e9a7e0b47faeb0, type: 3}
       propertyPath: typeToTile.Array.data[6]
       value: 
@@ -1345,6 +1356,10 @@ PrefabInstance:
       propertyPath: budgetText
       value: 
       objectReference: {fileID: 637848581}
+    - target: {fileID: 5259083944076841582, guid: 952145adbb9321a4c93a99de83ad1c15, type: 3}
+      propertyPath: hintButton
+      value: 
+      objectReference: {fileID: 149350780}
     - target: {fileID: 5259083944076841582, guid: 952145adbb9321a4c93a99de83ad1c15, type: 3}
       propertyPath: ecoVal1Text
       value: 

@@ -5,6 +5,8 @@ using TMPro; // for value labels
 
 public class GridManager : MonoBehaviour
 {
+    public static GridManager instance; // Singleton for easy access
+
     public enum Difficulty { Easy = 0, Medium = 1, Hard = 2 }
 
     [Header("Tilemap Setup")]
@@ -31,8 +33,12 @@ public class GridManager : MonoBehaviour
     private int currentLevelNumber;
     private bool _isLoading;
 
+    // --- LOGIC ENGINE ---
+    private HexagonGrid logicGrid;
+
     void Awake()
     {
+        instance = this;
         tilesManager = GameTiles.instance ?? FindObjectOfType<GameTiles>();
         if (tilesManager != null && tilesManager.Tilemap == null && tilemap != null)
             tilesManager.Tilemap = tilemap;
@@ -54,13 +60,7 @@ public class GridManager : MonoBehaviour
                         var j = JsonUtility.FromJson<LevelJson>(json);
                         var defLocal = LevelDefinitionMapper.FromJson(j);
                         PrepareDefinition(defLocal, -1);
-                        def = defLocal;
-
-                        PaintTiles(def);
-                        ApplyToWorldTiles(def);
-
-                        if (showCellValues && valueLabelPrefab != null) SpawnValueLabels(def);
-                        else ClearValueLabels();
+                        LoadComplete(defLocal, -1);
                     }
                     catch (System.Exception ex)
                     {
@@ -102,17 +102,12 @@ public class GridManager : MonoBehaviour
             var cfg = Resources.Load<ApiConfig>("ApiConfig");
 
             // 1. Get Base URL (default to 127.0.0.1)
-            string baseUrl = (cfg != null) ? cfg.baseApiUrl : "http://127.0.0.1:4000";
-
-            // CLEANUP: Trim whitespace and trailing slash, but DO NOT add "/levels/"
-            // LevelJsonLoader.cs line 97 adds "/levels/" automatically.
-            baseUrl = baseUrl.Trim().TrimEnd('/');
+            string baseUrl = (cfg != null) ? cfg.baseApiUrl.Trim().TrimEnd('/') : "http://127.0.0.1:4000";
 
             // 2. Pick Random Variation
             int variation = Random.Range(1, 101);
 
             // 3. Construct ID WITHOUT Extension
-            // LevelJsonLoader.cs adds ".json" automatically.
             string levelId = $"landscape_{variation}";
 
             Debug.Log($"[GridManager] Requesting variation: {levelId} from {baseUrl}");
@@ -125,17 +120,8 @@ public class GridManager : MonoBehaviour
                         var lj = JsonUtility.FromJson<LevelJson>(json);
                         var d = LevelDefinitionMapper.FromJson(lj);
                         PrepareDefinition(d, currentLevelNumber);
-                        def = d;
-
-                        PaintTiles(def);
-                        ApplyToWorldTiles(def);
-
-                        if (showCellValues && valueLabelPrefab != null) SpawnValueLabels(def);
-                        else ClearValueLabels();
-
-                        ConfigureCameraForLevel(currentLevelNumber);
-                        _isLoading = false;
-                        Debug.Log($"[GridManager] Painted {levelId} ({def.width}x{def.height}).");
+                        LoadComplete(d, currentLevelNumber);
+                        Debug.Log($"[GridManager] Painted {levelId} ({d.width}x{d.height}).");
                     }
                     catch (System.Exception ex)
                     {
@@ -163,17 +149,8 @@ public class GridManager : MonoBehaviour
                     var lj = JsonUtility.FromJson<LevelJson>(json);
                     var d = LevelDefinitionMapper.FromJson(lj);
                     PrepareDefinition(d, currentLevelNumber);
-                    def = d;
-
-                    PaintTiles(def);
-                    ApplyToWorldTiles(def);
-
-                    if (showCellValues && valueLabelPrefab != null) SpawnValueLabels(def);
-                    else ClearValueLabels();
-
-                    ConfigureCameraForLevel(currentLevelNumber);
-                    _isLoading = false;
-                    Debug.Log($"[GridManager] Painted (from JSON) {def.width}x{def.height} (level {currentLevelNumber}).");
+                    LoadComplete(d, currentLevelNumber);
+                    Debug.Log($"[GridManager] Painted (from JSON) {d.width}x{d.height} (level {currentLevelNumber}).");
                 }
                 catch (System.Exception ex)
                 {
@@ -221,21 +198,12 @@ public class GridManager : MonoBehaviour
 
         // Ensure arrays sized; if empty, populate with a distinct demo pattern.
         PrepareDefinition(candidate, levelNumber);
-        def = candidate;
+        LoadComplete(candidate, levelNumber);
 
-        PaintTiles(def);
-        ApplyToWorldTiles(def);
-
-        if (showCellValues && valueLabelPrefab != null) SpawnValueLabels(def);
-        else ClearValueLabels();
-
-        ConfigureCameraForLevel(levelNumber);
-
-        _isLoading = false;
-
-        Debug.Log($"[GridManager] Painted {def.width}x{def.height} (level {levelNumber}).");
+        Debug.Log($"[GridManager] Painted {candidate.width}x{candidate.height} (level {levelNumber}).");
     }
 
+    // --- HELPER METHODS ---
     public void ReloadCurrent() => LoadLevel(currentLevelNumber);
     public void NextLevel() => LoadLevel(Mathf.Clamp(currentLevelNumber + 1, 1, 5));
 
@@ -254,15 +222,7 @@ public class GridManager : MonoBehaviour
                 var j = JsonUtility.FromJson<LevelJson>(json);
                 var defLocal = LevelDefinitionMapper.FromJson(j);
                 PrepareDefinition(defLocal, -1);
-                def = defLocal;
-
-                PaintTiles(def);
-                ApplyToWorldTiles(def);
-
-                if (showCellValues && valueLabelPrefab != null) SpawnValueLabels(def);
-                else ClearValueLabels();
-
-                _isLoading = false;
+                LoadComplete(defLocal, -1);
             }
             catch (System.Exception ex)
             {
@@ -276,6 +236,141 @@ public class GridManager : MonoBehaviour
             _isLoading = false;
             LoadLevelFallback(GameState.SelectedLevel);
         }));
+    }
+
+    // --- CENTRAL LOADING POINT ---
+    private void LoadComplete(LevelDefinition d, int levelNumber)
+    {
+        def = d;
+
+        // 1. Initialize Unity Visuals
+        PaintTiles(def);
+        ApplyToWorldTiles(def);
+        if (showCellValues && valueLabelPrefab != null) SpawnValueLabels(def);
+        else ClearValueLabels();
+        if (levelNumber != -1) ConfigureCameraForLevel(levelNumber);
+
+        // 2. Initialize Logic Engine
+        InitializeLogicGrid(def);
+
+        _isLoading = false;
+    }
+
+    // --- BRIDGE: Unity Data -> Logic Grid ---
+    private void InitializeLogicGrid(LevelDefinition d)
+    {
+        // Create the logic object
+        logicGrid = new HexagonGrid(d.width); // Assuming square grid based on logic scripts
+
+        // Loop through data and populate the Logic Hexes
+        for (int y = 0; y < d.height; y++)
+        {
+            for (int x = 0; x < d.width; x++)
+            {
+                // CONVERSION: Unity (0,0) is Bottom-Left. JSON (0,0) is Top-Left.
+                // We must match the "PaintTiles" flip logic so we grab the correct data index.
+                int jsonRow = (d.height - 1) - y;
+                int idx = jsonRow * d.width + x;
+
+                if (idx < 0 || idx >= d.CellCount) continue;
+
+                // Get the logic hex
+                // IMPORTANT: Logic Grid now uses UNITY Coords (x, y) directly.
+                // This ensures Logic neighbors match Visual neighbors.
+                var hex = logicGrid.GetHexByCoords(x, y);
+
+                if (hex != null)
+                {
+                    // Populate Hex data
+                    hex.Optimal = (idx < d.optimalData.Count) ? d.optimalData[idx] : 0;
+                    hex.Utility = (idx < d.ecoData1.Count) ? d.ecoData1[idx] : 0;
+
+                    // Identify Type string for logic checks (habitat vs others)
+                    int tId = (idx < d.tileTypes.Count) ? d.tileTypes[idx] : 0;
+
+                    // Assuming Element 0 is Habitat based on your requirement
+                    // Also checking 2 just in case legacy data uses it, but 0 is priority.
+                    if (tId == 0) hex.Type = "habitat";
+                    else hex.Type = "terrain";
+                }
+            }
+        }
+        Debug.Log("Logic Grid Initialized.");
+    }
+
+    // --- BRIDGE: Button Functions ---
+
+    public void OnHintClicked()
+    {
+        if (logicGrid == null || tilesManager == null) return;
+
+        // 1. Gather Purchased Tiles (Pass Unity Coords directly)
+        List<(int col, int row)> purchased = new List<(int, int)>();
+
+        foreach (var kv in tilesManager.boughtTiles)
+        {
+            Vector3Int pos = kv.Key;
+            purchased.Add((pos.x, pos.y));
+        }
+
+        // 2. Ask Logic for Hint
+        try
+        {
+            var hintTuple = logicGrid.GetHint(purchased); // Returns (col, row)
+
+            // 3. Use result directly as Unity Coords
+            Vector3Int hintPos = new Vector3Int(hintTuple.col, hintTuple.row, 0);
+
+            // 4. Visual Feedback
+            Debug.Log($"Hint suggested at: {hintPos}");
+
+            // Highlight/Flash the tile
+            if (tilesManager.tiles.TryGetValue(hintPos, out WorldTile tile))
+            {
+                // Visual Feedback: Spawn a label "HINT"
+                if (valueLabelPrefab != null)
+                {
+                    var label = Instantiate(valueLabelPrefab, labelsParent ? labelsParent : transform);
+                    label.transform.position = tile.TilemapMember.GetCellCenterWorld(tile.LocalPlace);
+                    label.text = "HINT";
+                    label.color = Color.yellow;
+                    label.fontSize = 6;
+                    Destroy(label.gameObject, 3f); // Disappear after 3s
+                }
+                // Simple feedback: Turn it yellow
+                tile.TilemapMember.SetColor(tile.LocalPlace, Color.yellow);
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.Log("No hint available (or grid error): " + e.Message);
+        }
+    }
+
+    public void OnSubmitClicked()
+    {
+        if (logicGrid == null || tilesManager == null) return;
+
+        // 1. Gather Purchased (Pass Unity Coords directly)
+        List<(int col, int row)> purchased = new List<(int, int)>();
+        foreach (var kv in tilesManager.boughtTiles)
+        {
+            Vector3Int pos = kv.Key;
+            purchased.Add((pos.x, pos.y));
+        }
+
+        // 2. Check Logic
+        var (isConnected, visited) = logicGrid.isValidCorridor(purchased);
+
+        if (isConnected)
+        {
+            Debug.Log($"WIN! Corridor Connected. Score: {tilesManager.score}");
+            // Trigger Win UI logic here
+        }
+        else
+        {
+            Debug.Log("FAIL. Path not connected.");
+        }
     }
 
     // ---------- internal ----------
@@ -339,11 +434,6 @@ public class GridManager : MonoBehaviour
                 // Allow Element 6 or higher if TypeToTile has them
                 if (tId < 0 || tId >= typeToTile.Count)
                 {
-                    // Map to 0 (idx in tileArray is standard Unity index)
-                    // Note: We populate tileArray using Unity logic (d.Idx for visual placement),
-                    // but we READ from the JSON using the flipped 'idx'.
-                    // Actually, tileArray needs to be flat. 
-                    // Let's use standard visual index for the Array position:
                     int visualIdx = y * d.width + x;
                     tileArray[visualIdx] = null; // empty
                 }
@@ -417,7 +507,6 @@ public class GridManager : MonoBehaviour
                 int jsonRow = (d.height - 1) - y;
                 int idx = jsonRow * d.width + x;
 
-                // Safety check
                 if (idx < 0 || idx >= d.CellCount) continue;
 
                 int val = hasDisplay ? d.displayValues[idx] : (idx < d.ecoData1.Count ? d.ecoData1[idx] : 0);
