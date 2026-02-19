@@ -94,18 +94,12 @@ public class GridManager : MonoBehaviour
         GameState.SelectedLevel = currentLevelNumber;
 
         // --- NEW VARIATION LOGIC START ---
-        // If we are loading Level 1, we want to pick a random "landscape_X"
         if (currentLevelNumber == 1)
         {
             var cfg = Resources.Load<ApiConfig>("ApiConfig");
-
-            // 1. Get Base URL (default to 127.0.0.1)
             string baseUrl = (cfg != null) ? cfg.baseApiUrl.Trim().TrimEnd('/') : "http://127.0.0.1:4000";
 
-            // 2. Pick Random Variation
             int variation = Random.Range(1, 101);
-
-            // 3. Construct ID WITHOUT Extension
             string levelId = $"landscape_{variation}";
 
             Debug.Log($"[GridManager] Requesting variation: {levelId} from {baseUrl}");
@@ -126,11 +120,9 @@ public class GridManager : MonoBehaviour
                     LoadLevelFallback(currentLevelNumber);
                 }
             ));
-            return; // Exit here so we don't run the standard loader below
+            return;
         }
-        // --- NEW VARIATION LOGIC END ---
 
-        // Standard JSON load
         StartCoroutine(LevelJsonLoader.LoadLevelJson(
             currentLevelNumber,
             onLoaded: (json) =>
@@ -150,31 +142,25 @@ public class GridManager : MonoBehaviour
         ));
     }
 
-    // --- NEW HELPER: Centralized JSON Processing ---
     private void ProcessLoadedJson(string json)
     {
         var lj = JsonUtility.FromJson<LevelJson>(json);
         var d = LevelDefinitionMapper.FromJson(lj);
 
-        // --- MANUAL DATA RECOVERY ---
-        // If EcoData is 0/Empty (due to serialization bugs), parse it manually from the text.
         if (d.ecoData1 == null || d.ecoData1.Count == 0 || (d.ecoData1.Count > 0 && d.ecoData1[1] == 0))
         {
             Debug.LogWarning("EcoData1 appears empty/zero. Attempting Manual Parse...");
             d.ecoData1 = ManualParseList(json, "\"ecoData1\"");
             Debug.Log($"Manual Parse Result: {d.ecoData1.Count} items found. Index 1 value: {(d.ecoData1.Count > 1 ? d.ecoData1[1] : -1)}");
         }
-        // ----------------------------
 
         PrepareDefinition(d, currentLevelNumber);
         LoadComplete(d, currentLevelNumber);
     }
 
-    // Parses a JSON integer array by regex to bypass JsonUtility case-sensitivity
     private List<int> ManualParseList(string json, string fieldName)
     {
         List<int> result = new List<int>();
-        // Find "fieldName": [ ... ]
         int startIdx = json.IndexOf(fieldName);
         if (startIdx == -1) return result;
 
@@ -195,15 +181,10 @@ public class GridManager : MonoBehaviour
 
     private void LoadLevelFallback(int levelNumber)
     {
-        // 1) Try runtime provider first.
         LevelDefinition candidate = null;
-        try
-        {
-            candidate = GridLayouts.GetLayout(levelNumber);
-        }
-        catch { /* provider not present -> ignore */ }
+        try { candidate = GridLayouts.GetLayout(levelNumber); }
+        catch { }
 
-        // 2) Fallback to nested inspector assignments.
         if (candidate == null)
         {
             candidate = levelNumber switch
@@ -223,14 +204,11 @@ public class GridManager : MonoBehaviour
             return;
         }
 
-        // Ensure arrays sized; if empty, populate with a distinct demo pattern.
         PrepareDefinition(candidate, levelNumber);
         LoadComplete(candidate, levelNumber);
-
         Debug.Log($"[GridManager] Painted {candidate.width}x{candidate.height} (level {levelNumber}).");
     }
 
-    // --- HELPER METHODS ---
     public void ReloadCurrent() => LoadLevel(currentLevelNumber);
     public void NextLevel() => LoadLevel(Mathf.Clamp(currentLevelNumber + 1, 1, 5));
 
@@ -259,60 +237,46 @@ public class GridManager : MonoBehaviour
         }));
     }
 
-    // --- CENTRAL LOADING POINT ---
     private void LoadComplete(LevelDefinition d, int levelNumber)
     {
         def = d;
 
-        // DEBUG: Verify Data Integrity
         int ecoCount = (def.ecoData1 != null) ? def.ecoData1.Count : 0;
-
         Debug.Log($"[LoadComplete] Level Data Loaded. EcoData1 Count: {ecoCount}, Budget (Tile Limit): {d.budget}");
 
         if (ecoCount == 0) Debug.LogError("CRITICAL: EcoData1 is EMPTY. Tiles will have 0 Value.");
 
-        // 1. Initialize Unity Visuals
         PaintTiles(def);
         ApplyToWorldTiles(def);
         if (showCellValues && valueLabelPrefab != null) SpawnValueLabels(def);
         else ClearValueLabels();
         if (levelNumber != -1) ConfigureCameraForLevel(levelNumber);
 
-        // 2. Initialize Logic Engine
         InitializeLogicGrid(def);
-
         _isLoading = false;
     }
 
-    // --- BRIDGE: Unity Data -> Logic Grid ---
     private void InitializeLogicGrid(LevelDefinition d)
     {
-        // Create the logic object
         logicGrid = new HexagonGrid(d.width);
 
-        // Loop through data and populate the Logic Hexes
         for (int y = 0; y < d.height; y++)
         {
             for (int x = 0; x < d.width; x++)
             {
-                // CONVERSION: Unity (0,0) is Bottom-Left. JSON (0,0) is Top-Left.
                 int jsonRow = (d.height - 1) - y;
                 int idx = jsonRow * d.width + x;
 
                 if (idx < 0 || idx >= d.CellCount) continue;
 
-                // Get the logic hex
                 var hex = logicGrid.GetHexByCoords(x, y);
 
                 if (hex != null)
                 {
-                    // Populate Hex data
                     hex.Optimal = (idx < d.optimalData.Count) ? d.optimalData[idx] : 0;
                     hex.Utility = (idx < d.ecoData1.Count) ? d.ecoData1[idx] : 0;
 
-                    // Identify Type string for logic checks (habitat vs others)
                     int tId = (idx < d.tileTypes.Count) ? d.tileTypes[idx] : 0;
-
                     if (tId == 0) hex.Type = "habitat";
                     else hex.Type = "terrain";
                 }
@@ -321,39 +285,39 @@ public class GridManager : MonoBehaviour
         Debug.Log("Logic Grid Initialized.");
     }
 
-    // --- BRIDGE: Button Functions ---
-
     public void OnHintClicked()
     {
         if (logicGrid == null || tilesManager == null) return;
 
         List<(int col, int row)> purchased = new List<(int, int)>();
-
         foreach (var kv in tilesManager.boughtTiles)
         {
-            Vector3Int pos = kv.Key;
-            purchased.Add((pos.x, pos.y));
+            purchased.Add((kv.Key.x, kv.Key.y));
         }
 
         try
         {
-            var hintTuple = logicGrid.GetHint(purchased); // Returns (col, row)
+            var hintTuple = logicGrid.GetHint(purchased);
             Vector3Int hintPos = new Vector3Int(hintTuple.col, hintTuple.row, 0);
-
-            Debug.Log($"Hint suggested at: {hintPos}");
 
             if (tilesManager.tiles.TryGetValue(hintPos, out WorldTile tile))
             {
+                // UNLOCK FLAGS: Required to allow color changes via script
+                tile.TilemapMember.SetTileFlags(tile.LocalPlace, TileFlags.None);
+
+                // HIGHLIGHT: Set to Yellow
+                tile.TilemapMember.SetColor(tile.LocalPlace, new Color(0f, 0f, 0.5f));
+
                 if (valueLabelPrefab != null)
                 {
                     var label = Instantiate(valueLabelPrefab, labelsParent ? labelsParent : transform);
-                    label.transform.position = tile.TilemapMember.GetCellCenterWorld(tile.LocalPlace);
+                    label.transform.position = tile.TilemapMember.GetCellCenterWorld(tile.LocalPlace) + new Vector3(0, 0, -1);
                     label.text = "HINT";
                     label.color = Color.yellow;
                     label.fontSize = 6;
                     Destroy(label.gameObject, 3f);
                 }
-                tile.TilemapMember.SetColor(tile.LocalPlace, Color.yellow);
+                Debug.Log($"Hint highlighted at: {hintPos}");
             }
         }
         catch (System.Exception e)
@@ -369,23 +333,14 @@ public class GridManager : MonoBehaviour
         List<(int col, int row)> purchased = new List<(int, int)>();
         foreach (var kv in tilesManager.boughtTiles)
         {
-            Vector3Int pos = kv.Key;
-            purchased.Add((pos.x, pos.y));
+            purchased.Add((kv.Key.x, kv.Key.y));
         }
 
         var (isConnected, visited) = logicGrid.isValidCorridor(purchased);
 
-        if (isConnected)
-        {
-            Debug.Log($"WIN! Corridor Connected. Score: {tilesManager.score}");
-        }
-        else
-        {
-            Debug.Log("FAIL. Path not connected.");
-        }
+        if (isConnected) Debug.Log($"WIN! Corridor Connected. Score: {tilesManager.score}");
+        else Debug.Log("FAIL. Path not connected.");
     }
-
-    // ---------- internal ----------
 
     private void PrepareDefinition(LevelDefinition d, int levelNumber)
     {
@@ -443,24 +398,16 @@ public class GridManager : MonoBehaviour
     {
         if (tilesManager == null)
             tilesManager = GameTiles.instance ?? FindObjectOfType<GameTiles>();
-        if (tilesManager == null)
-        {
-            Debug.LogError("GridManager: No GameTiles instance present in scene.");
-            return;
-        }
+        if (tilesManager == null) return;
 
         if (tilesManager.Tilemap == null && tilemap != null)
             tilesManager.Tilemap = tilemap;
 
         tilesManager.RebuildFromTilemap(tilemap ?? tilesManager.Tilemap);
 
-        // --- UPDATED LOGIC ---
-        // 1. Budget = Number of tiles allowed (from JSON 'budget')
         tilesManager.budget = d.budget;
         tilesManager.score = 0;
         tilesManager.boughtTiles.Clear();
-
-        Debug.Log($"[ApplyToWorldTiles] Budget set to {tilesManager.budget} tiles.");
 
         foreach (var kv in tilesManager.tiles)
         {
@@ -470,10 +417,7 @@ public class GridManager : MonoBehaviour
 
             if (idx < 0 || idx >= d.CellCount) continue;
 
-            // 2. Cost = 1 (Each tile costs 1 "unit" of budget)
             wTile.Cost = 1;
-
-            // 3. Eco Value = Data from JSON (Score gained when bought)
             wTile.ecoVal = (d.ecoData1 != null && idx < d.ecoData1.Count) ? d.ecoData1[idx] : 0;
             wTile.ecoVal2 = (d.ecoData2 != null && idx < d.ecoData2.Count) ? d.ecoData2[idx] : 0;
             wTile.ecoVal3 = (d.ecoData3 != null && idx < d.ecoData3.Count) ? d.ecoData3[idx] : 0;
