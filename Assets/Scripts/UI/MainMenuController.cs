@@ -4,6 +4,7 @@ public class MainMenuController : MonoBehaviour
 {
     // Called by the Play button
     public void GoToLevelSelect() => SceneLoader.LoadLevelSelect();
+    public void GoToLevelTemplate() => SceneLoader.LoadLevelTemplate();
 
     // Placeholders for future WebGL routing; safe in Editor/Standalone.
     public void OpenHowTo()  { Debug.Log("TODO: Open /how-to (web)"); }
