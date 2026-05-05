@@ -13,8 +13,8 @@ public class GridManager : MonoBehaviour
     [Header("Tilemap Setup")]
     [Tooltip("Assign your hex Tilemap here (Grid layout: Hexagonal).")]
     [SerializeField] private Tilemap tilemap;
-    [Tooltip("Index 0 = blank/clear, 1 = first terrain tile, etc.")]
-    [SerializeField] private List<Tile> typeToTile;
+    [SerializeField] private List<TileTypeEntry> tileTypeEntries;
+    private Dictionary<string, TileBase> _tileTypeMap;
 
     [Header("LevelDefinitions (nested serializable objects)")]
     [SerializeField] private LevelDefinition level1Easy8x8;   // width=8,  height=8
@@ -36,6 +36,7 @@ public class GridManager : MonoBehaviour
 
     // --- LOGIC ENGINE ---
     private HexagonGrid logicGrid;
+    private HashSet<(int col, int row)> _revealedHints = new HashSet<(int col, int row)>();
 
     void Awake()
     {
@@ -43,6 +44,11 @@ public class GridManager : MonoBehaviour
         tilesManager = GameTiles.instance ?? FindObjectOfType<GameTiles>();
         if (tilesManager != null && tilesManager.Tilemap == null && tilemap != null)
             tilesManager.Tilemap = tilemap;
+
+        _tileTypeMap = new Dictionary<string, TileBase>(System.StringComparer.OrdinalIgnoreCase);
+        foreach (var entry in tileTypeEntries)
+            if (entry != null && !string.IsNullOrEmpty(entry.typeName) && entry.tile != null)
+                _tileTypeMap[entry.typeName.Trim().ToLower()] = entry.tile;
     }
 
     void Start()
@@ -84,7 +90,7 @@ public class GridManager : MonoBehaviour
         }
 
         currentLevelNumber = Mathf.Clamp(GameState.SelectedLevel, 1, 5);
-        LoadLevel(currentLevelNumber);
+        LoadLevel(GameState.SelectedLevel);
     }
 
     public void LoadLevel(int levelNumber)
@@ -150,7 +156,7 @@ public class GridManager : MonoBehaviour
         if (d.ecoData1 == null || d.ecoData1.Count == 0 || (d.ecoData1.Count > 0 && d.ecoData1[1] == 0))
         {
             Debug.LogWarning("EcoData1 appears empty/zero. Attempting Manual Parse...");
-            d.ecoData1 = ManualParseList(json, "\"ecoData1\"");
+            d.ecoData1 = ManualParseList(json, "\"utilities\"");
             Debug.Log($"Manual Parse Result: {d.ecoData1.Count} items found. Index 1 value: {(d.ecoData1.Count > 1 ? d.ecoData1[1] : -1)}");
         }
 
@@ -209,7 +215,11 @@ public class GridManager : MonoBehaviour
         Debug.Log($"[GridManager] Painted {candidate.width}x{candidate.height} (level {levelNumber}).");
     }
 
-    public void ReloadCurrent() => LoadLevel(currentLevelNumber);
+    public void ReloadCurrent()
+    {
+        _revealedHints.Clear();
+        LoadLevel(currentLevelNumber);
+    }
     public void NextLevel() => LoadLevel(Mathf.Clamp(currentLevelNumber + 1, 1, 5));
 
     public void StartLevelById(string levelId)
@@ -264,7 +274,7 @@ public class GridManager : MonoBehaviour
         {
             for (int x = 0; x < d.width; x++)
             {
-                int jsonRow = (d.height - 1) - y;
+                int jsonRow = y;
                 int idx = jsonRow * d.width + x;
 
                 if (idx < 0 || idx >= d.CellCount) continue;
@@ -276,9 +286,8 @@ public class GridManager : MonoBehaviour
                     hex.Optimal = (idx < d.optimalData.Count) ? d.optimalData[idx] : 0;
                     hex.Utility = (idx < d.ecoData1.Count) ? d.ecoData1[idx] : 0;
 
-                    int tId = (idx < d.tileTypes.Count) ? d.tileTypes[idx] : 0;
-                    if (tId == 0) hex.Type = "habitat";
-                    else hex.Type = "terrain";
+                    string tileTypeStr = (idx < d.tileTypes.Count) ? d.tileTypes[idx] : "";
+                    hex.Type = (!string.IsNullOrEmpty(tileTypeStr)) ? tileTypeStr.Trim().ToLower() : "forest";
                 }
             }
         }
@@ -297,7 +306,13 @@ public class GridManager : MonoBehaviour
 
         try
         {
-            var hintTuple = logicGrid.GetHint(purchased);
+            var hintTuple = logicGrid.GetHint(purchased, _revealedHints);
+            if (hintTuple.col == -1 && hintTuple.row == -1)
+            {
+                Debug.Log("All hints revealed.");
+                return;
+            }
+            _revealedHints.Add((hintTuple.col, hintTuple.row));
             Vector3Int hintPos = new Vector3Int(hintTuple.col, hintTuple.row, 0);
 
             if (tilesManager.tiles.TryGetValue(hintPos, out WorldTile tile))
@@ -351,20 +366,18 @@ public class GridManager : MonoBehaviour
             if (levelNumber == 3) { d.width = 12; d.height = 12; }
         }
 
-        d.EnsureSize(d.width, d.height, defaultTileType: 1, defaultCost: 1);
+        d.EnsureSize(d.width, d.height, defaultTileType: "forest", defaultCost: 1);
 
-        bool looksEmpty = true;
-        int n = d.CellCount;
-        for (int i = 0; i < n; i++) { if (d.tileTypes[i] != 0 && d.tileTypes[i] != 1) { looksEmpty = false; break; } }
+        bool looksEmpty = d.tileTypes == null || d.tileTypes.Count == 0 || d.tileTypes.Count != d.width * d.height;
 
         if (looksEmpty)
         {
             switch (levelNumber)
             {
-                case 1: d.Fill((x, y, w, h) => ((x + y) % 2 == 0) ? 1 : 2); break;
-                case 2: d.Fill((x, y, w, h) => (x == w / 2) ? 2 : 1); break;
-                case 3: d.Fill((x, y, w, h) => (x == y || x == (w - 1 - y)) ? 3 : 1); break;
-                default: d.Fill((x, y, w, h) => 1); break;
+                case 1: d.Fill((x, y, w, h) => ((x + y) % 2 == 0) ? "habitat" : "forest"); break;
+                case 2: d.Fill((x, y, w, h) => (x == w / 2) ? "forest" : "habitat"); break;
+                case 3: d.Fill((x, y, w, h) => (x == y || x == (w - 1 - y)) ? "grassland" : "habitat"); break;
+                default: d.Fill((x, y, w, h) => "forest"); break;
             }
         }
     }
@@ -379,13 +392,15 @@ public class GridManager : MonoBehaviour
         for (int y = 0; y < d.height; y++)
             for (int x = 0; x < d.width; x++)
             {
-                int jsonRow = (d.height - 1) - y;
+                int jsonRow = y;
                 int idx = jsonRow * d.width + x;
-                int tId = (idx >= 0 && idx < d.tileTypes.Count ? d.tileTypes[idx] : 0);
+                string tileTypeStr = (idx >= 0 && idx < d.tileTypes.Count) ? d.tileTypes[idx] : null;
                 int visualIdx = y * d.width + x;
 
-                if (tId < 0 || tId >= typeToTile.Count) tileArray[visualIdx] = null;
-                else tileArray[visualIdx] = typeToTile[tId];
+                string tileKey = (tileTypeStr != null) ? tileTypeStr.Trim().ToLower() : "forest";
+                TileBase visualTile = _tileTypeMap.TryGetValue(tileKey, out var t) ? t : null;
+
+                tileArray[visualIdx] = visualTile;
             }
 
         tilemap.ClearAllTiles();
@@ -417,7 +432,7 @@ public class GridManager : MonoBehaviour
 
             if (idx < 0 || idx >= d.CellCount) continue;
 
-            wTile.Cost = 1;
+            wTile.Cost = (d.costData != null && idx < d.costData.Count) ? d.costData[idx] : 1;
             wTile.ecoVal = (d.ecoData1 != null && idx < d.ecoData1.Count) ? d.ecoData1[idx] : 0;
             wTile.ecoVal2 = (d.ecoData2 != null && idx < d.ecoData2.Count) ? d.ecoData2[idx] : 0;
             wTile.ecoVal3 = (d.ecoData3 != null && idx < d.ecoData3.Count) ? d.ecoData3[idx] : 0;
@@ -428,6 +443,14 @@ public class GridManager : MonoBehaviour
                 tilesManager.boughtTiles[wTile.LocalPlace] = wTile;
                 tilesManager.score += wTile.ecoVal + wTile.ecoVal2 + wTile.ecoVal3;
             }
+
+            string tileTypeStr = (d.tileTypes != null && idx < d.tileTypes.Count)
+                ? d.tileTypes[idx].Trim().ToLower()
+                : "forest";
+            if (tileTypeStr == "habitat" || tileTypeStr == "road")
+                wTile.Locked = true;
+            else
+                wTile.Locked = false;
         }
     }
 
@@ -482,4 +505,11 @@ public class GridManager : MonoBehaviour
                 break;
         }
     }
+}
+
+[System.Serializable]
+public class TileTypeEntry
+{
+    public string typeName;
+    public TileBase tile;
 }

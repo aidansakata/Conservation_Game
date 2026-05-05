@@ -213,7 +213,7 @@ public class HexagonGrid
     }
 
     // Given a list of selected hexes, return the position of a hint from the optimal grid.
-    public (int col, int row) GetHint(List<(int col, int row)> selected)
+    public (int col, int row) GetHint(List<(int col, int row)> selected, HashSet<(int col, int row)> alreadyRevealed)
     {
         var choices = new List<(int col, int row)>();
         var habitatCells = GetHabitatCells();
@@ -222,13 +222,13 @@ public class HexagonGrid
         {
             for (int col = 0; col < size; col++)
             {
-                if (optimalGrid[col, row] == 1 && (!selected.Contains((col, row)) && !habitatCells.Contains((col, row))))
+                if (optimalGrid[col, row] == 1 && (!selected.Contains((col, row)) && !habitatCells.Contains((col, row)) && !alreadyRevealed.Contains((col, row))))
                 {
                     choices.Add((col, row));
                 }
             }
         }
-        if (choices.Count == 0) throw new Exception("No valid hints available.");
+        if (choices.Count == 0) return (-1, -1);
         return choices[new Random().Next(choices.Count)];
     }
 }

@@ -27,11 +27,24 @@ const CATALOG_PATH = path.join(STORAGE_LEVELS, 'catalog.json');
 if (!fs.existsSync(STORAGE_LEVELS)) fs.mkdirSync(STORAGE_LEVELS, { recursive: true });
 if (!fs.existsSync(CATALOG_PATH)) fs.writeFileSync(CATALOG_PATH, JSON.stringify({ levels: [] }, null, 2));
 
+// explicit catalog handler must be registered before express.static so no-cache header is sent
+app.get('/levels/catalog.json', (_req: Request, res: Response) => {
+  try {
+    if (!fs.existsSync(CATALOG_PATH)) return res.json({ levels: [] });
+    const txt = fs.readFileSync(CATALOG_PATH, 'utf8');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.type('application/json').send(txt);
+  } catch (e) {
+    console.error(e);
+    res.json({ levels: [] });
+  }
+});
+
 // serve normalized levels under /levels
 app.use('/levels', express.static(STORAGE_LEVELS, { maxAge: '1m', etag: true }));
 
 // multer for file uploads (limit 2MB)
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
 // --- Optional DB wiring for leaderboard ---
 const databaseUrl = process.env.DATABASE_URL;
@@ -106,6 +119,12 @@ app.post('/admin/levels/upload', upload.single('file'), async (req: Request, res
       .readdirSync(STORAGE_LEVELS)
       .filter((f) => f.toLowerCase().endsWith('.json') && f !== 'catalog.json');
 
+    files.sort((a, b) => {
+      const numA = Number((a.match(/(\d+)\.json$/i) ?? [, '0'])[1]);
+      const numB = Number((b.match(/(\d+)\.json$/i) ?? [, '0'])[1]);
+      return numA - numB;
+    });
+
     const allEntries: { id: string; width: number; height: number; budget: number; path: string }[] = [];
     for (const f of files) {
       try {
@@ -133,19 +152,6 @@ app.post('/admin/levels/upload', upload.single('file'), async (req: Request, res
   } catch (e: any) {
     console.error(e);
     res.status(500).json({ error: 'upload_failed', detail: String(e?.message ?? e) });
-  }
-});
-
-// --- Serve the catalog ---
-app.get('/levels/catalog.json', (_req: Request, res: Response) => {
-  try {
-    if (!fs.existsSync(CATALOG_PATH)) return res.json({ levels: [] });
-    const txt = fs.readFileSync(CATALOG_PATH, 'utf8');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.type('application/json').send(txt);
-  } catch (e) {
-    console.error(e);
-    res.json({ levels: [] });
   }
 });
 

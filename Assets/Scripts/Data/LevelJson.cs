@@ -10,7 +10,7 @@ public class LevelJson
     public int budget;
 
     // arrays (length = width * height)
-    public List<int> tileTypes;
+    public List<string> tileTypes;
     public List<int> costData;
 
     // JSON now uses "utilities" → we map that into LevelDefinition.ecoData1 in the mapper

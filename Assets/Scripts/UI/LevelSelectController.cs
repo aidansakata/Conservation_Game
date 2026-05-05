@@ -30,6 +30,18 @@ public class LevelSelectController : MonoBehaviour
         SceneManager.LoadScene("Game-Interface");
     }
 
+    public void OnLevelButtonPressed(int levelNumber)
+    {
+        GameState.SelectedLevel = levelNumber;
+        SceneManager.LoadScene("LevelTemplate");
+    }
+
+    public void StartSelectedLevel()
+    {
+        GameState.SelectedLevelId = null;
+        SceneManager.LoadScene("Game-Interface");
+    }
+
     public void BackToMenu() => SceneManager.LoadScene("MainMenu");
     public void BackToLevelSelect() => SceneManager.LoadScene("LevelSelect");
 }

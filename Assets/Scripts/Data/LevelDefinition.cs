@@ -10,7 +10,7 @@ public class LevelDefinition
     public int budget = 0;
 
     // Per cell arrays: size must be width * height
-    public List<int> tileTypes = new List<int>();
+    public List<string> tileTypes = new List<string>();
     public List<int> costData = new List<int>();
     public List<int> ecoData1 = new List<int>();
     public List<int> ecoData2 = new List<int>();
@@ -28,7 +28,7 @@ public class LevelDefinition
     public int Idx(int x, int y) => y * width + x;
 
     /// Ensure all cell lists are sized to width * height and filled with defaults.
-    public void EnsureSize(int w, int h, int defaultTileType = 0, int defaultCost = 1)
+    public void EnsureSize(int w, int h, string defaultTileType = "", int defaultCost = 1)
     {
         width = Mathf.Max(1, w);
         height = Mathf.Max(1, h);
@@ -44,14 +44,14 @@ public class LevelDefinition
         EnsureList(ref optimalData, n, 0);
     }
 
-    public int GetTileType(int x, int y)
+    public string GetTileType(int x, int y)
     {
-        if (x < 0 || x >= width || y < 0 || y >= height) return 0;
+        if (x < 0 || x >= width || y < 0 || y >= height) return "";
         var i = Idx(x, y);
-        return (i >= 0 && i < tileTypes.Count) ? tileTypes[i] : 0;
+        return (i >= 0 && i < tileTypes.Count) ? tileTypes[i] : "";
     }
 
-    public void SetTileType(int x, int y, int t)
+    public void SetTileType(int x, int y, string t)
     {
         if (x < 0 || x >= width || y < 0 || y >= height) return;
         var i = Idx(x, y);
@@ -59,7 +59,7 @@ public class LevelDefinition
     }
 
     /// Fill tileTypes via a rule (x,y,w,h) -> type.
-    public void Fill(Func<int, int, int, int, int> rule)
+    public void Fill(Func<int, int, int, int, string> rule)
     {
         EnsureSize(width, height);
         for (int y = 0; y < height; y++)
@@ -71,6 +71,13 @@ public class LevelDefinition
     private static void EnsureList(ref List<int> list, int n, int fill)
     {
         if (list == null) list = new List<int>(n);
+        if (list.Count > n) list.RemoveRange(n, list.Count - n);
+        while (list.Count < n) list.Add(fill);
+    }
+
+    private static void EnsureList(ref List<string> list, int n, string fill)
+    {
+        if (list == null) list = new List<string>(n);
         if (list.Count > n) list.RemoveRange(n, list.Count - n);
         while (list.Count < n) list.Add(fill);
     }

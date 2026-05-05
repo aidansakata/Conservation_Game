@@ -3,7 +3,7 @@ export interface LevelJson {
   width: number;
   height: number;
   budget: number;
-  tileTypes: number[];
+  tileTypes: string[];
   costData: number[];   // defaulted to 1s
   ecoData1: number[];   // from model.utilities
   optimalData?: number[] | null; // from model.optimal (0/1 per cell)
@@ -12,17 +12,6 @@ export interface LevelJson {
 
 export interface CatalogEntry { id: string; width: number; height: number; budget: number; path: string }
 export interface Catalog { levels: CatalogEntry[] }
-
-// IMPORTANT: Keep this order in sync with Unity's PaintTiles mapping.
-const TYPE_MAP: Record<string, number> = {
-  habitat: 0,
-  city: 1,
-  forest: 2,
-  grassland: 3,
-  farmland: 4,
-  water: 5,
-  road: 6,
-};
 
 const asInt = (v: any) => (Number.isFinite(v) ? Number(v) : 0);
 
@@ -54,7 +43,7 @@ export function normalizeModelJsonToLevelJsons(model: any): { key: string; level
     const size = n * n;
 
     // allocate arrays
-    const tileTypes = new Array<number>(size).fill(0);
+    const tileTypes = new Array<string>(size).fill('');
     const costData = new Array<number>(size).fill(1);
     const ecoData1 = new Array<number>(size).fill(0);
     const optimalData = new Array<number>(size).fill(0);
@@ -65,8 +54,7 @@ export function normalizeModelJsonToLevelJsons(model: any): { key: string; level
 
       const t = types[String(i)];
       if (t != null) {
-        const ti = typeof t === 'string' ? (TYPE_MAP[t] ?? 0) : Number(t);
-        tileTypes[idx] = Number.isFinite(ti) ? ti : 0;
+        tileTypes[idx] = String(t).trim().toLowerCase();
       }
 
       const u = utilities[String(i)];
