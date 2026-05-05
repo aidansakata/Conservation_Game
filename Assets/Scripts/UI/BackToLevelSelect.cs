@@ -8,6 +8,6 @@ public class BackToLevelSelect : MonoBehaviour
     public void Go()
     {
         if (clearJsonSelection) GameState.SelectedLevelId = "";   // optional: avoid stale JSON id
-        SceneManager.LoadScene("Level_Select");
+        SceneManager.LoadScene("LevelSelect");
     }
 }

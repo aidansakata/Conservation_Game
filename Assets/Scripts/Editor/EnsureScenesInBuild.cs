@@ -8,10 +8,10 @@ using UnityEditor.Build.Reporting;
 
 public static class EnsureScenesInBuild
 {
-    [MenuItem("Tools/Scenes/Ensure MainMenu, LevelSelect, Grid_Scene in Build")]
+    [MenuItem("Tools/Scenes/Ensure MainMenu, LevelSelect, Game-Interface in Build")]
     public static void Ensure()
     {
-        var wanted = new[] { "Assets/Scenes/MainMenu.unity", "Assets/Scenes/LevelSelect.unity", "Assets/Scenes/Grid_Scene.unity" };
+        var wanted = new[] { "Assets/Scenes/MainMenu.unity", "Assets/Scenes/LevelSelect.unity", "Assets/Scenes/Game-Interface.unity" };
         var current = EditorBuildSettings.scenes.Select(s => s.path).ToList();
         bool changed = false;
         foreach (var path in wanted)
