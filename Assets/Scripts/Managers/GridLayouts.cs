@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 /// <summary>
@@ -31,7 +32,7 @@ public static class GridLayouts
             width = w,
             height = h,
             budget = 25000,
-            tileTypes = new List<int>(new int[w * h]),
+            tileTypes = Enumerable.Repeat("habitat", w * h).ToList(),
             costData = new List<int>(new int[w * h]),
             ecoData1 = new List<int>(new int[w * h]),
             ecoData2 = new List<int>(new int[w * h]),
@@ -74,7 +75,7 @@ public static class GridLayouts
             for (int x = 0; x < 7; x++)
             {
                 int idx = y * w + x;
-                def.tileTypes[idx] = 1;                         // e.g. 1 = forest
+                def.tileTypes[idx] = "forest";
                 def.costData[idx] = cost7[y, x] * 1000;
                 def.ecoData1[idx] = eco7[y, x];
                 def.lockedData[idx] = lock7[y, x];
@@ -95,7 +96,7 @@ public static class GridLayouts
             width = w,
             height = h,
             budget = 25000,
-            tileTypes = new List<int>(new int[w * h]),
+            tileTypes = Enumerable.Repeat("habitat", w * h).ToList(),
             costData = new List<int>(new int[w * h]),
             ecoData1 = new List<int>(new int[w * h]),
             ecoData2 = new List<int>(new int[w * h]),
@@ -115,7 +116,7 @@ public static class GridLayouts
             width = w,
             height = h,
             budget = 25000,
-            tileTypes = new List<int>(new int[w * h]),
+            tileTypes = Enumerable.Repeat("habitat", w * h).ToList(),
             costData = new List<int>(new int[w * h]),
             ecoData1 = new List<int>(new int[w * h]),
             ecoData2 = new List<int>(new int[w * h]),

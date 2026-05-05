@@ -1,17 +1,20 @@
 ﻿using UnityEngine;
 using UnityEngine.Tilemaps;
 using System.Collections.Generic;
-using TMPro; // for value labels
+using TMPro;
+using System.Text.RegularExpressions; // Required for manual parsing
 
 public class GridManager : MonoBehaviour
 {
+    public static GridManager instance; // Singleton for easy access
+
     public enum Difficulty { Easy = 0, Medium = 1, Hard = 2 }
 
     [Header("Tilemap Setup")]
     [Tooltip("Assign your hex Tilemap here (Grid layout: Hexagonal).")]
     [SerializeField] private Tilemap tilemap;
-    [Tooltip("Index 0 = blank/clear, 1 = first terrain tile, etc.")]
-    [SerializeField] private List<Tile> typeToTile;
+    [SerializeField] private List<TileTypeEntry> tileTypeEntries;
+    private Dictionary<string, TileBase> _tileTypeMap;
 
     [Header("LevelDefinitions (nested serializable objects)")]
     [SerializeField] private LevelDefinition level1Easy8x8;   // width=8,  height=8
@@ -31,11 +34,21 @@ public class GridManager : MonoBehaviour
     private int currentLevelNumber;
     private bool _isLoading;
 
+    // --- LOGIC ENGINE ---
+    private HexagonGrid logicGrid;
+    private HashSet<(int col, int row)> _revealedHints = new HashSet<(int col, int row)>();
+
     void Awake()
     {
+        instance = this;
         tilesManager = GameTiles.instance ?? FindObjectOfType<GameTiles>();
         if (tilesManager != null && tilesManager.Tilemap == null && tilemap != null)
             tilesManager.Tilemap = tilemap;
+
+        _tileTypeMap = new Dictionary<string, TileBase>(System.StringComparer.OrdinalIgnoreCase);
+        foreach (var entry in tileTypeEntries)
+            if (entry != null && !string.IsNullOrEmpty(entry.typeName) && entry.tile != null)
+                _tileTypeMap[entry.typeName.Trim().ToLower()] = entry.tile;
     }
 
     void Start()
@@ -51,16 +64,7 @@ public class GridManager : MonoBehaviour
                 StartCoroutine(LevelJsonLoader.LoadLevelJsonById(baseUrl, GameState.SelectedLevelId, (json) => {
                     try
                     {
-                        var j = JsonUtility.FromJson<LevelJson>(json);
-                        var defLocal = LevelDefinitionMapper.FromJson(j);
-                        PrepareDefinition(defLocal, -1);
-                        def = defLocal;
-
-                        PaintTiles(def);
-                        ApplyToWorldTiles(def);
-
-                        if (showCellValues && valueLabelPrefab != null) SpawnValueLabels(def);
-                        else ClearValueLabels();
+                        ProcessLoadedJson(json);
                     }
                     catch (System.Exception ex)
                     {
@@ -86,7 +90,7 @@ public class GridManager : MonoBehaviour
         }
 
         currentLevelNumber = Mathf.Clamp(GameState.SelectedLevel, 1, 5);
-        LoadLevel(currentLevelNumber);
+        LoadLevel(GameState.SelectedLevel);
     }
 
     public void LoadLevel(int levelNumber)
@@ -95,28 +99,41 @@ public class GridManager : MonoBehaviour
         currentLevelNumber = Mathf.Clamp(levelNumber, 1, 5);
         GameState.SelectedLevel = currentLevelNumber;
 
-        // Try JSON-first. If not present or parse fails, fall back to existing providers.
+        // --- NEW VARIATION LOGIC START ---
+        if (currentLevelNumber == 1)
+        {
+            var cfg = Resources.Load<ApiConfig>("ApiConfig");
+            string baseUrl = (cfg != null) ? cfg.baseApiUrl.Trim().TrimEnd('/') : "http://127.0.0.1:4000";
+
+            int variation = Random.Range(1, 101);
+            string levelId = $"landscape_{variation}";
+
+            Debug.Log($"[GridManager] Requesting variation: {levelId} from {baseUrl}");
+
+            StartCoroutine(LevelJsonLoader.LoadLevelJsonById(baseUrl, levelId,
+                (json) =>
+                {
+                    try { ProcessLoadedJson(json); }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogWarning($"JSON parse failed for {levelId}: {ex.Message}. Falling back.");
+                        LoadLevelFallback(currentLevelNumber);
+                    }
+                },
+                (err) =>
+                {
+                    Debug.LogWarning($"Failed to load {levelId} from {baseUrl}: {err}. Falling back.");
+                    LoadLevelFallback(currentLevelNumber);
+                }
+            ));
+            return;
+        }
+
         StartCoroutine(LevelJsonLoader.LoadLevelJson(
             currentLevelNumber,
             onLoaded: (json) =>
             {
-                try
-                {
-                    var lj = JsonUtility.FromJson<LevelJson>(json);
-                    var d = LevelDefinitionMapper.FromJson(lj);
-                    PrepareDefinition(d, currentLevelNumber);
-                    def = d;
-
-                    PaintTiles(def);
-                    ApplyToWorldTiles(def);
-
-                    if (showCellValues && valueLabelPrefab != null) SpawnValueLabels(def);
-                    else ClearValueLabels();
-
-                    ConfigureCameraForLevel(currentLevelNumber);
-                    _isLoading = false;
-                    Debug.Log($"[GridManager] Painted (from JSON) {def.width}x{def.height} (level {currentLevelNumber}).");
-                }
+                try { ProcessLoadedJson(json); }
                 catch (System.Exception ex)
                 {
                     Debug.LogWarning($"JSON parse failed for level {currentLevelNumber}: {ex.Message}. Falling back.");
@@ -131,17 +148,49 @@ public class GridManager : MonoBehaviour
         ));
     }
 
+    private void ProcessLoadedJson(string json)
+    {
+        var lj = JsonUtility.FromJson<LevelJson>(json);
+        var d = LevelDefinitionMapper.FromJson(lj);
+
+        if (d.ecoData1 == null || d.ecoData1.Count == 0 || (d.ecoData1.Count > 0 && d.ecoData1[1] == 0))
+        {
+            Debug.LogWarning("EcoData1 appears empty/zero. Attempting Manual Parse...");
+            d.ecoData1 = ManualParseList(json, "\"utilities\"");
+            Debug.Log($"Manual Parse Result: {d.ecoData1.Count} items found. Index 1 value: {(d.ecoData1.Count > 1 ? d.ecoData1[1] : -1)}");
+        }
+
+        PrepareDefinition(d, currentLevelNumber);
+        LoadComplete(d, currentLevelNumber);
+    }
+
+    private List<int> ManualParseList(string json, string fieldName)
+    {
+        List<int> result = new List<int>();
+        int startIdx = json.IndexOf(fieldName);
+        if (startIdx == -1) return result;
+
+        int arrayStart = json.IndexOf('[', startIdx);
+        int arrayEnd = json.IndexOf(']', arrayStart);
+        if (arrayStart == -1 || arrayEnd == -1) return result;
+
+        string content = json.Substring(arrayStart + 1, arrayEnd - arrayStart - 1);
+        string[] parts = content.Split(',');
+
+        foreach (var p in parts)
+        {
+            if (int.TryParse(p.Trim(), out int val))
+                result.Add(val);
+        }
+        return result;
+    }
+
     private void LoadLevelFallback(int levelNumber)
     {
-        // 1) Try runtime provider first.
         LevelDefinition candidate = null;
-        try
-        {
-            candidate = GridLayouts.GetLayout(levelNumber);
-        }
-        catch { /* provider not present → ignore */ }
+        try { candidate = GridLayouts.GetLayout(levelNumber); }
+        catch { }
 
-        // 2) Fallback to nested inspector assignments.
         if (candidate == null)
         {
             candidate = levelNumber switch
@@ -161,24 +210,16 @@ public class GridManager : MonoBehaviour
             return;
         }
 
-        // Ensure arrays sized; if empty, populate with a distinct demo pattern.
         PrepareDefinition(candidate, levelNumber);
-        def = candidate;
-
-        PaintTiles(def);
-        ApplyToWorldTiles(def);
-
-        if (showCellValues && valueLabelPrefab != null) SpawnValueLabels(def);
-        else ClearValueLabels();
-
-        ConfigureCameraForLevel(levelNumber);
-
-        _isLoading = false;
-
-        Debug.Log($"[GridManager] Painted {def.width}x{def.height} (level {levelNumber}).");
+        LoadComplete(candidate, levelNumber);
+        Debug.Log($"[GridManager] Painted {candidate.width}x{candidate.height} (level {levelNumber}).");
     }
 
-    public void ReloadCurrent() => LoadLevel(currentLevelNumber);
+    public void ReloadCurrent()
+    {
+        _revealedHints.Clear();
+        LoadLevel(currentLevelNumber);
+    }
     public void NextLevel() => LoadLevel(Mathf.Clamp(currentLevelNumber + 1, 1, 5));
 
     public void StartLevelById(string levelId)
@@ -186,23 +227,12 @@ public class GridManager : MonoBehaviour
         if (_isLoading) return;
         _isLoading = true;
 
-        StartCoroutine(LevelJsonLoader.LoadLevelJsonById(levelId, (json) =>
+        var cfg = Resources.Load<ApiConfig>("ApiConfig");
+        string baseUrl = (cfg != null) ? cfg.baseApiUrl : "http://localhost:4000/levels/";
+
+        StartCoroutine(LevelJsonLoader.LoadLevelJsonById(baseUrl, levelId, (json) =>
         {
-            try
-            {
-                var j = JsonUtility.FromJson<LevelJson>(json);
-                var def = LevelDefinitionMapper.FromJson(j);
-                PrepareDefinition(def, -1);
-                def = def;
-
-                PaintTiles(def);
-                ApplyToWorldTiles(def);
-
-                if (showCellValues && valueLabelPrefab != null) SpawnValueLabels(def);
-                else ClearValueLabels();
-
-                _isLoading = false;
-            }
+            try { ProcessLoadedJson(json); }
             catch (System.Exception ex)
             {
                 Debug.LogWarning($"JSON parse failed for level id {levelId}: {ex.Message}. Falling back.");
@@ -217,11 +247,118 @@ public class GridManager : MonoBehaviour
         }));
     }
 
-    // ---------- internal ----------
+    private void LoadComplete(LevelDefinition d, int levelNumber)
+    {
+        def = d;
+
+        int ecoCount = (def.ecoData1 != null) ? def.ecoData1.Count : 0;
+        Debug.Log($"[LoadComplete] Level Data Loaded. EcoData1 Count: {ecoCount}, Budget (Tile Limit): {d.budget}");
+
+        if (ecoCount == 0) Debug.LogError("CRITICAL: EcoData1 is EMPTY. Tiles will have 0 Value.");
+
+        PaintTiles(def);
+        ApplyToWorldTiles(def);
+        if (showCellValues && valueLabelPrefab != null) SpawnValueLabels(def);
+        else ClearValueLabels();
+        if (levelNumber != -1) ConfigureCameraForLevel(levelNumber);
+
+        InitializeLogicGrid(def);
+        _isLoading = false;
+    }
+
+    private void InitializeLogicGrid(LevelDefinition d)
+    {
+        logicGrid = new HexagonGrid(d.width);
+
+        for (int y = 0; y < d.height; y++)
+        {
+            for (int x = 0; x < d.width; x++)
+            {
+                int jsonRow = y;
+                int idx = jsonRow * d.width + x;
+
+                if (idx < 0 || idx >= d.CellCount) continue;
+
+                var hex = logicGrid.GetHexByCoords(x, y);
+
+                if (hex != null)
+                {
+                    hex.Optimal = (idx < d.optimalData.Count) ? d.optimalData[idx] : 0;
+                    hex.Utility = (idx < d.ecoData1.Count) ? d.ecoData1[idx] : 0;
+
+                    string tileTypeStr = (idx < d.tileTypes.Count) ? d.tileTypes[idx] : "";
+                    hex.Type = (!string.IsNullOrEmpty(tileTypeStr)) ? tileTypeStr.Trim().ToLower() : "forest";
+                }
+            }
+        }
+        Debug.Log("Logic Grid Initialized.");
+    }
+
+    public void OnHintClicked()
+    {
+        if (logicGrid == null || tilesManager == null) return;
+
+        List<(int col, int row)> purchased = new List<(int, int)>();
+        foreach (var kv in tilesManager.boughtTiles)
+        {
+            purchased.Add((kv.Key.x, kv.Key.y));
+        }
+
+        try
+        {
+            var hintTuple = logicGrid.GetHint(purchased, _revealedHints);
+            if (hintTuple.col == -1 && hintTuple.row == -1)
+            {
+                Debug.Log("All hints revealed.");
+                return;
+            }
+            _revealedHints.Add((hintTuple.col, hintTuple.row));
+            Vector3Int hintPos = new Vector3Int(hintTuple.col, hintTuple.row, 0);
+
+            if (tilesManager.tiles.TryGetValue(hintPos, out WorldTile tile))
+            {
+                // UNLOCK FLAGS: Required to allow color changes via script
+                tile.TilemapMember.SetTileFlags(tile.LocalPlace, TileFlags.None);
+
+                // HIGHLIGHT: Set to Yellow
+                tile.TilemapMember.SetColor(tile.LocalPlace, new Color(0f, 0f, 0.5f));
+
+                if (valueLabelPrefab != null)
+                {
+                    var label = Instantiate(valueLabelPrefab, labelsParent ? labelsParent : transform);
+                    label.transform.position = tile.TilemapMember.GetCellCenterWorld(tile.LocalPlace) + new Vector3(0, 0, -1);
+                    label.text = "HINT";
+                    label.color = Color.yellow;
+                    label.fontSize = 6;
+                    Destroy(label.gameObject, 3f);
+                }
+                Debug.Log($"Hint highlighted at: {hintPos}");
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.Log("No hint available (or grid error): " + e.Message);
+        }
+    }
+
+    public void OnSubmitClicked()
+    {
+        if (logicGrid == null || tilesManager == null) return;
+
+        List<(int col, int row)> purchased = new List<(int, int)>();
+        foreach (var kv in tilesManager.boughtTiles)
+        {
+            purchased.Add((kv.Key.x, kv.Key.y));
+        }
+
+        var (isConnected, visited) = logicGrid.isValidCorridor(purchased);
+
+        if (isConnected) Debug.Log($"WIN! Corridor Connected. Score: {tilesManager.score}");
+        else Debug.Log("FAIL. Path not connected.");
+    }
 
     private void PrepareDefinition(LevelDefinition d, int levelNumber)
     {
-        // If width/height are zero, set reasonable defaults.
         if (d.width <= 0 || d.height <= 0)
         {
             if (levelNumber == 1) { d.width = 8; d.height = 8; }
@@ -229,30 +366,18 @@ public class GridManager : MonoBehaviour
             if (levelNumber == 3) { d.width = 12; d.height = 12; }
         }
 
-        d.EnsureSize(d.width, d.height, defaultTileType: 1, defaultCost: 1);
+        d.EnsureSize(d.width, d.height, defaultTileType: "forest", defaultCost: 1);
 
-        // If tileTypes look empty (all zeros/ones from Ensure), stamp a distinct pattern
-        // so each level *visibly* differs without hand-editing.
-        bool looksEmpty = true;
-        int n = d.CellCount;
-        for (int i = 0; i < n; i++) { if (d.tileTypes[i] != 0 && d.tileTypes[i] != 1) { looksEmpty = false; break; } }
+        bool looksEmpty = d.tileTypes == null || d.tileTypes.Count == 0 || d.tileTypes.Count != d.width * d.height;
 
         if (looksEmpty)
         {
             switch (levelNumber)
             {
-                case 1: // checker: 1 vs 2
-                    d.Fill((x, y, w, h) => ((x + y) % 2 == 0) ? 1 : 2);
-                    break;
-                case 2: // vertical river stripe: 2 through middle, 1 elsewhere
-                    d.Fill((x, y, w, h) => (x == w / 2) ? 2 : 1);
-                    break;
-                case 3: // road diagonals: 3; background 1
-                    d.Fill((x, y, w, h) => (x == y || x == (w - 1 - y)) ? 3 : 1);
-                    break;
-                default:
-                    d.Fill((x, y, w, h) => 1);
-                    break;
+                case 1: d.Fill((x, y, w, h) => ((x + y) % 2 == 0) ? "habitat" : "forest"); break;
+                case 2: d.Fill((x, y, w, h) => (x == w / 2) ? "forest" : "habitat"); break;
+                case 3: d.Fill((x, y, w, h) => (x == y || x == (w - 1 - y)) ? "grassland" : "habitat"); break;
+                default: d.Fill((x, y, w, h) => "forest"); break;
             }
         }
     }
@@ -267,21 +392,19 @@ public class GridManager : MonoBehaviour
         for (int y = 0; y < d.height; y++)
             for (int x = 0; x < d.width; x++)
             {
-                int idx = d.Idx(x, y);
-                int tId = (idx < d.tileTypes.Count ? d.tileTypes[idx] : 0);
-                if (tId <= 0 || tId >= typeToTile.Count)
-                {
-                    tileArray[idx] = null; // empty
-                }
-                else
-                {
-                    tileArray[idx] = typeToTile[tId];
-                }
+                int jsonRow = y;
+                int idx = jsonRow * d.width + x;
+                string tileTypeStr = (idx >= 0 && idx < d.tileTypes.Count) ? d.tileTypes[idx] : null;
+                int visualIdx = y * d.width + x;
+
+                string tileKey = (tileTypeStr != null) ? tileTypeStr.Trim().ToLower() : "forest";
+                TileBase visualTile = _tileTypeMap.TryGetValue(tileKey, out var t) ? t : null;
+
+                tileArray[visualIdx] = visualTile;
             }
 
-        var region = new BoundsInt(0, 0, 0, d.width, d.height, 1);
         tilemap.ClearAllTiles();
-        tilemap.SetTilesBlock(region, tileArray);
+        tilemap.SetTilesBlock(new BoundsInt(0, 0, 0, d.width, d.height, 1), tileArray);
         tilemap.RefreshAllTiles();
         tilemap.CompressBounds();
     }
@@ -290,11 +413,7 @@ public class GridManager : MonoBehaviour
     {
         if (tilesManager == null)
             tilesManager = GameTiles.instance ?? FindObjectOfType<GameTiles>();
-        if (tilesManager == null)
-        {
-            Debug.LogError("GridManager: No GameTiles instance present in scene.");
-            return;
-        }
+        if (tilesManager == null) return;
 
         if (tilesManager.Tilemap == null && tilemap != null)
             tilesManager.Tilemap = tilemap;
@@ -308,39 +427,46 @@ public class GridManager : MonoBehaviour
         foreach (var kv in tilesManager.tiles)
         {
             var wTile = kv.Value;
-            int idx = wTile.LocalPlace.y * d.width + wTile.LocalPlace.x;
+            int jsonRow = (d.height - 1) - wTile.LocalPlace.y;
+            int idx = jsonRow * d.width + wTile.LocalPlace.x;
 
             if (idx < 0 || idx >= d.CellCount) continue;
 
-            wTile.Cost = (idx < d.costData.Count ? d.costData[idx] : 1);
-            wTile.ecoVal = (idx < d.ecoData1.Count ? d.ecoData1[idx] : 0);
-            wTile.ecoVal2 = (idx < d.ecoData2.Count ? d.ecoData2[idx] : 0);
-            wTile.ecoVal3 = (idx < d.ecoData3.Count ? d.ecoData3[idx] : 0);
+            wTile.Cost = (d.costData != null && idx < d.costData.Count) ? d.costData[idx] : 1;
+            wTile.ecoVal = (d.ecoData1 != null && idx < d.ecoData1.Count) ? d.ecoData1[idx] : 0;
+            wTile.ecoVal2 = (d.ecoData2 != null && idx < d.ecoData2.Count) ? d.ecoData2[idx] : 0;
+            wTile.ecoVal3 = (d.ecoData3 != null && idx < d.ecoData3.Count) ? d.ecoData3[idx] : 0;
 
-            if (idx < d.lockedData.Count && d.lockedData[idx] > 0)
+            if (d.lockedData != null && idx < d.lockedData.Count && d.lockedData[idx] > 0)
             {
                 wTile.Purchased = wTile.Locked = true;
                 tilesManager.boughtTiles[wTile.LocalPlace] = wTile;
                 tilesManager.score += wTile.ecoVal + wTile.ecoVal2 + wTile.ecoVal3;
             }
+
+            string tileTypeStr = (d.tileTypes != null && idx < d.tileTypes.Count)
+                ? d.tileTypes[idx].Trim().ToLower()
+                : "forest";
+            if (tileTypeStr == "habitat" || tileTypeStr == "road")
+                wTile.Locked = true;
+            else
+                wTile.Locked = false;
         }
     }
 
     private void SpawnValueLabels(LevelDefinition d)
     {
         ClearValueLabels();
-
         bool hasDisplay = d.displayValues != null && d.displayValues.Count == d.CellCount;
-
         for (int y = 0; y < d.height; y++)
             for (int x = 0; x < d.width; x++)
             {
-                int idx = d.Idx(x, y);
+                int jsonRow = (d.height - 1) - y;
+                int idx = jsonRow * d.width + x;
+                if (idx < 0 || idx >= d.CellCount) continue;
                 int val = hasDisplay ? d.displayValues[idx] : (idx < d.ecoData1.Count ? d.ecoData1[idx] : 0);
-
                 var cell = new Vector3Int(x, y, 0);
                 var world = tilemap.GetCellCenterWorld(cell);
-
                 var label = Instantiate(valueLabelPrefab, labelsParent ? labelsParent : transform);
                 label.transform.position = world;
                 label.text = val.ToString();
@@ -379,4 +505,11 @@ public class GridManager : MonoBehaviour
                 break;
         }
     }
+}
+
+[System.Serializable]
+public class TileTypeEntry
+{
+    public string typeName;
+    public TileBase tile;
 }

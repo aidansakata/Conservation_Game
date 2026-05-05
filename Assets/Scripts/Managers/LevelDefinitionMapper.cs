@@ -13,7 +13,7 @@ public static class LevelDefinitionMapper
         d.height = j.height;
         d.budget = j.budget;
 
-        d.EnsureSize(d.width, d.height, defaultTileType: 0, defaultCost: 1);
+        d.EnsureSize(d.width, d.height, defaultTileType: "", defaultCost: 1);
 
         void CopyList(List<int> src, List<int> dst, string name)
         {
@@ -27,8 +27,17 @@ public static class LevelDefinitionMapper
             for (int i = 0; i < n; i++) dst[i] = src[i];
         }
 
+        void CopyStringList(List<string> src, List<string> dst, string name)
+        {
+            if (src == null || src.Count == 0) return;
+            if (src.Count != dst.Count)
+                Debug.LogWarning($"[LevelDefinitionMapper] {name} length {src.Count} != expected {dst.Count}");
+            int n = Mathf.Min(src.Count, dst.Count);
+            for (int i = 0; i < n; i++) dst[i] = src[i];
+        }
+
         // required
-        CopyList(j.tileTypes, d.tileTypes, nameof(j.tileTypes));
+        CopyStringList(j.tileTypes, d.tileTypes, nameof(j.tileTypes));
         CopyList(j.costData, d.costData, nameof(j.costData));
 
         // map JSON "utilities" -> LevelDefinition.ecoData1

@@ -11,7 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/LevelSelect.unity
     guid: 25294653724846448a2c4f8d4f279240
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Grid_Scene.unity
     guid: f2381b504a07fd649887247ae41458e7
   - enabled: 0
@@ -26,4 +26,10 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/Level_5.unity
     guid: 00000000000000000000000000000000
+  - enabled: 1
+    path: Assets/Scenes/Game-Interface.unity
+    guid: d612b5d71e3909a47b8ad3d53263aa01
+  - enabled: 1
+    path: Assets/Scenes/LevelTemplate.unity
+    guid: b6d7ef8c935c01447bd13e608e2d3b2e
   m_configObjects: {}
