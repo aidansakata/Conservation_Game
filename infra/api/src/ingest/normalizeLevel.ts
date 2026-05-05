@@ -27,7 +27,8 @@ export function normalizeModelJsonToLevelJsons(model: any): { key: string; level
     // Only read the whitelisted fields from the model JSON
     const types = block.types ?? {};
     const utilities = block.utilities ?? {};
-    const optimal = block.optimal ?? {};
+    const optimal = block.optimal;
+    const hasOptimal = optimal != null && typeof optimal === 'object' && Object.keys(optimal).length > 0;
     const budget = asInt(block.budget ?? 0);
     const optUtil = block.opt_util != null ? asInt(block.opt_util) : null;
 
@@ -46,7 +47,7 @@ export function normalizeModelJsonToLevelJsons(model: any): { key: string; level
     const tileTypes = new Array<string>(size).fill('');
     const costData = new Array<number>(size).fill(1);
     const ecoData1 = new Array<number>(size).fill(0);
-    const optimalData = new Array<number>(size).fill(0);
+    const optimalData = hasOptimal ? new Array<number>(size).fill(0) : null;
 
     // populate from 1-based keys -> index (k-1)
     for (let i = 1; i <= size; i++) {
@@ -60,8 +61,10 @@ export function normalizeModelJsonToLevelJsons(model: any): { key: string; level
       const u = utilities[String(i)];
       if (u != null) ecoData1[idx] = asInt(u);
 
-      const o = optimal[String(i)];
-      if (o != null) optimalData[idx] = o ? 1 : 0;
+      if (hasOptimal && optimalData != null) {
+        const o = optimal[String(i)];
+        if (o != null) optimalData[idx] = o ? 1 : 0;
+      }
     }
 
     const level: LevelJson = {
@@ -72,7 +75,7 @@ export function normalizeModelJsonToLevelJsons(model: any): { key: string; level
       tileTypes,
       costData,
       utilities: ecoData1,
-      optimalData,    // keep, even if zeroes (Unity may ignore)
+      ...(optimalData !== null ? { optimalData } : {}),
       optUtil,        // carried as metadata; safe to ignore in Unity
     };
 

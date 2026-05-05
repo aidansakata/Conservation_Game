@@ -139,6 +139,8 @@ public class TileFunctions : MonoBehaviour
             else
             {
                 Debug.Log("Not enough budget to purchase tile!");
+                var gm = FindObjectOfType<GridManager>();
+                if (gm != null) gm.ShowBudgetWarning();
             }
         }
         // CASE 2: SELL

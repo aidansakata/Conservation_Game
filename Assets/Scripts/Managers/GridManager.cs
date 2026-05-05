@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using System.Text.RegularExpressions; // Required for manual parsing
@@ -49,12 +50,14 @@ public class GridManager : MonoBehaviour
     [SerializeField] private Sprite popupCloseSprite;
     [SerializeField] private Sprite popupButterflySprite;
     [SerializeField] private Canvas popupCanvas;
+    [SerializeField] private TextMeshProUGUI budgetWarningText;
 
     private GameObject _submitPopup;
     private TextMeshProUGUI _resultText;
     private TextMeshProUGUI _scoreText;
     private int _currentOptUtil = 1;
     private LevelDefinition _currentDef;
+    private Coroutine _budgetWarningCoroutine;
 
     void Awake()
     {
@@ -841,6 +844,22 @@ public class GridManager : MonoBehaviour
     {
         if (_submitPopup != null) _submitPopup.SetActive(false);
         Debug.Log("Results clicked — not yet implemented.");
+    }
+
+    public void ShowBudgetWarning()
+    {
+        if (budgetWarningText == null) return;
+        budgetWarningText.text = "Not enough patches remaining!";
+        budgetWarningText.gameObject.SetActive(true);
+        if (_budgetWarningCoroutine != null) StopCoroutine(_budgetWarningCoroutine);
+        _budgetWarningCoroutine = StartCoroutine(HideBudgetWarning());
+    }
+
+    private IEnumerator HideBudgetWarning()
+    {
+        yield return new WaitForSeconds(2f);
+        if (budgetWarningText != null)
+            budgetWarningText.gameObject.SetActive(false);
     }
 }
 

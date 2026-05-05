@@ -1,18 +1,13 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// RESERVED FOR TANNER — Pathfinding algorithm implementation.
+/// This script is intentionally left as a stub.
+/// Do not add logic here until Tanner's implementation is integrated.
+/// Expected inputs: HexagonGrid logicGrid, (int col, int row) start, (int col, int row) goal
+/// Expected output: List<(int col, int row)> optimalPath
+/// </summary>
 public class PathFindingService : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    // Reserved for Tanner's implementation
 }
