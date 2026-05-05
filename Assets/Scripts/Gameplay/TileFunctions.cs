@@ -174,7 +174,7 @@ public class TileFunctions : MonoBehaviour
     private void ResetClick()
     {
         var gm = GameObject.FindObjectOfType<GridManager>();
-        if (gm != null) gm.ReloadCurrent();
+        if (gm != null) gm.ResetCurrentLevel();
     }
 
     private List<Vector3Int> GetNeighborPositions(Vector3Int center)

@@ -8,6 +8,7 @@ public class LevelDefinition
     public int width = 8;
     public int height = 8;
     public int budget = 0;
+    public int optUtil = 0;
 
     // Per cell arrays: size must be width * height
     public List<string> tileTypes = new List<string>();
