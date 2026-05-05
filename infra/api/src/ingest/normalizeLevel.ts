@@ -5,7 +5,7 @@ export interface LevelJson {
   budget: number;
   tileTypes: string[];
   costData: number[];   // defaulted to 1s
-  ecoData1: number[];   // from model.utilities
+  utilities: number[];   // from model.utilities
   optimalData?: number[] | null; // from model.optimal (0/1 per cell)
   optUtil?: number | null;       // from model.opt_util (carried through; Unity can ignore)
 }
@@ -71,7 +71,7 @@ export function normalizeModelJsonToLevelJsons(model: any): { key: string; level
       budget,
       tileTypes,
       costData,
-      ecoData1,
+      utilities: ecoData1,
       optimalData,    // keep, even if zeroes (Unity may ignore)
       optUtil,        // carried as metadata; safe to ignore in Unity
     };

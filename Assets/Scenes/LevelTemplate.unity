@@ -968,8 +968,8 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 887229956}
         m_TargetAssemblyTypeName: LevelSelectController, Assembly-CSharp
-        m_MethodName: SelectLevel
-        m_Mode: 3
+        m_MethodName: StartSelectedLevel
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine

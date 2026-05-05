@@ -46,6 +46,9 @@ public static class LevelDefinitionMapper
         // optional flags (present in your JSON)
         CopyList(j.optimalData, d.optimalData, nameof(j.optimalData));
 
+        // optional scalar
+        d.optUtil = j.optUtil;
+
         // DO NOT copy ecoData2/3/locked/displayValues anymore
 
         return d;
