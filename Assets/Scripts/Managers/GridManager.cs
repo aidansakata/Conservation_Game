@@ -521,8 +521,7 @@ public class GridManager : MonoBehaviour
         foreach (var kv in tilesManager.tiles)
         {
             var wTile = kv.Value;
-            int jsonRow = (d.height - 1) - wTile.LocalPlace.y;
-            int idx = jsonRow * d.width + wTile.LocalPlace.x;
+            int idx = wTile.LocalPlace.y * d.width + wTile.LocalPlace.x;
 
             if (idx < 0 || idx >= d.CellCount) continue;
 
@@ -551,20 +550,27 @@ public class GridManager : MonoBehaviour
     private void SpawnValueLabels(LevelDefinition d)
     {
         ClearValueLabels();
-        bool hasDisplay = d.displayValues != null && d.displayValues.Count == d.CellCount;
         for (int y = 0; y < d.height; y++)
             for (int x = 0; x < d.width; x++)
             {
-                int jsonRow = (d.height - 1) - y;
-                int idx = jsonRow * d.width + x;
+                int idx = y * d.width + x;
                 if (idx < 0 || idx >= d.CellCount) continue;
-                int val = hasDisplay ? d.displayValues[idx] : (idx < d.ecoData1.Count ? d.ecoData1[idx] : 0);
+                int val = (d.ecoData1 != null && idx < d.ecoData1.Count) ? d.ecoData1[idx] : 0;
                 var cell = new Vector3Int(x, y, 0);
                 var world = tilemap.GetCellCenterWorld(cell);
                 var label = Instantiate(valueLabelPrefab, labelsParent ? labelsParent : transform);
                 label.transform.position = world;
                 label.text = val.ToString();
                 label.alignment = TextAlignmentOptions.Center;
+                var tmp = label.GetComponent<TextMeshPro>();
+                if (tmp != null)
+                {
+                    tmp.fontSize = 5f;
+                    tmp.color = Color.red;
+                    tmp.fontStyle = FontStyles.Bold;
+                    tmp.outlineWidth = 0.3f;
+                    tmp.outlineColor = Color.black;
+                }
                 spawnedLabels.Add(label);
             }
     }

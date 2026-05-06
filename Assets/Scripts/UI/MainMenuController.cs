@@ -8,7 +8,7 @@ public class MainMenuController : MonoBehaviour
 
     // Placeholders for future WebGL routing; safe in Editor/Standalone.
     public void OpenHowTo()  { Debug.Log("TODO: Open /how-to (web)"); }
-    public void OpenAbout()  { Debug.Log("TODO: Open /about (web)"); }
+    public void OpenAbout()  { SceneLoader.LoadPatches(); }
     public void OpenHallOfFame() { Debug.Log("TODO: Open /hall-of-fame (web)"); }
 }
 
