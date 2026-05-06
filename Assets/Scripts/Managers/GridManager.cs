@@ -632,8 +632,8 @@ public class GridManager : MonoBehaviour
         boardRect.anchorMin = new Vector2(0.5f, 0.5f);
         boardRect.anchorMax = new Vector2(0.5f, 0.5f);
         boardRect.pivot = new Vector2(0.5f, 0.5f);
-        boardRect.sizeDelta = new Vector2(750f, 520f);
-        boardRect.anchoredPosition = new Vector2(0f, -20f);
+        boardRect.sizeDelta = new Vector2(1080.7f, 530.1f);
+        boardRect.anchoredPosition = new Vector2(0f, 42.6f);
         var boardImg = boardGO.AddComponent<Image>();
         boardImg.sprite = popupBoardSprite;
         boardImg.type = Image.Type.Simple;
@@ -646,8 +646,8 @@ public class GridManager : MonoBehaviour
         logoRect.anchorMin = new Vector2(0.5f, 0.5f);
         logoRect.anchorMax = new Vector2(0.5f, 0.5f);
         logoRect.pivot = new Vector2(0.5f, 1f);
-        logoRect.sizeDelta = new Vector2(380f, 150f);
-        logoRect.anchoredPosition = new Vector2(80f, 300f);
+        logoRect.sizeDelta = new Vector2(380f, 191.54f);
+        logoRect.anchoredPosition = new Vector2(-2.8f, 260.76f);
         var logoImg = logoGO.AddComponent<Image>();
         logoImg.sprite = popupLogoSprite;
         logoImg.preserveAspect = true;
@@ -659,8 +659,8 @@ public class GridManager : MonoBehaviour
         pawlRect.anchorMin = new Vector2(0.5f, 0.5f);
         pawlRect.anchorMax = new Vector2(0.5f, 0.5f);
         pawlRect.pivot = new Vector2(0.5f, 0.5f);
-        pawlRect.sizeDelta = new Vector2(320f, 300f);
-        pawlRect.anchoredPosition = new Vector2(185f, 0f);
+        pawlRect.sizeDelta = new Vector2(280.6f, 281.2f);
+        pawlRect.anchoredPosition = new Vector2(169.1f, -65.5f);
         var pawlImg = pawlGO.AddComponent<Image>();
         pawlImg.sprite = popupPawlSprite;
         pawlImg.preserveAspect = true;
@@ -672,8 +672,8 @@ public class GridManager : MonoBehaviour
         bfRect.anchorMin = new Vector2(0.5f, 1f);
         bfRect.anchorMax = new Vector2(0.5f, 1f);
         bfRect.pivot = new Vector2(0.5f, 0.5f);
-        bfRect.sizeDelta = new Vector2(70f, 70f);
-        bfRect.anchoredPosition = new Vector2(330f, 130f);
+        bfRect.sizeDelta = new Vector2(70f, 57.9f);
+        bfRect.anchoredPosition = new Vector2(277.5f, 108.449982f);
         var bfImg = butterflyGO.AddComponent<Image>();
         bfImg.sprite = popupButterflySprite;
         bfImg.preserveAspect = true;
@@ -686,7 +686,7 @@ public class GridManager : MonoBehaviour
         closeRect.anchorMax = new Vector2(1f, 1f);
         closeRect.pivot = new Vector2(0.5f, 0.5f);
         closeRect.sizeDelta = new Vector2(55f, 55f);
-        closeRect.anchoredPosition = new Vector2(40f, 40f);
+        closeRect.anchoredPosition = new Vector2(494.049988f, 225.849991f);
         var closeImg = closeGO.AddComponent<Image>();
         closeImg.sprite = popupCloseSprite;
         closeImg.preserveAspect = true;
@@ -702,9 +702,10 @@ public class GridManager : MonoBehaviour
         rbRect.anchorMax = new Vector2(0.5f, 0.5f);
         rbRect.pivot = new Vector2(0.5f, 0.5f);
         rbRect.sizeDelta = new Vector2(310f, 280f);
-        rbRect.anchoredPosition = new Vector2(-180f, 10f);
+        rbRect.anchoredPosition = new Vector2(-172.020004f, -76.809998f);
         var rbImg = resultsBoxGO.AddComponent<Image>();
         rbImg.color = new Color(0.98f, 0.93f, 0.78f, 1f);
+        rbImg.enabled = false;
 
         // Results label — parented to ResultsBox
         var resultsLabelGO = new GameObject("ResultsLabel");
@@ -733,7 +734,7 @@ public class GridManager : MonoBehaviour
         rtRect.anchoredPosition = new Vector2(0f, 30f);
         _resultText = resultGO.AddComponent<TextMeshProUGUI>();
         _resultText.text = "";
-        _resultText.fontSize = 20;
+        _resultText.fontSize = 25;
         _resultText.color = new Color(0.25f, 0.12f, 0.05f, 1f);
         _resultText.alignment = TextAlignmentOptions.Center;
 
@@ -745,23 +746,23 @@ public class GridManager : MonoBehaviour
         stRect.anchorMax = new Vector2(0.5f, 0.5f);
         stRect.pivot = new Vector2(0.5f, 0.5f);
         stRect.sizeDelta = new Vector2(260f, 90f);
-        stRect.anchoredPosition = new Vector2(0f, -70f);
+        stRect.anchoredPosition = new Vector2(0f, -44.9f);
         _scoreText = scoreGO.AddComponent<TextMeshProUGUI>();
         _scoreText.text = "";
-        _scoreText.fontSize = 52;
+        _scoreText.fontSize = 28;
         _scoreText.fontStyle = FontStyles.Bold;
         _scoreText.color = new Color(0.25f, 0.12f, 0.05f, 1f);
         _scoreText.alignment = TextAlignmentOptions.Center;
 
         // Three buttons at bottom using Javier sprites
         CreatePopupButton(boardGO.transform, "BestCorridorBtn", popupBestCorridorSprite,
-            new Vector2(-230f, -220f), new Vector2(215f, 55f), OnShowBestCorridorClicked);
+            new Vector2(-252.5f, -251.6f), new Vector2(232.5f, 62.2f), OnShowBestCorridorClicked);
 
         CreatePopupButton(boardGO.transform, "PlayAgainBtn", popupPlayAgainSprite,
-            new Vector2(5f, -215f), new Vector2(215f, 65f), OnPlayAgainClicked);
+            new Vector2(5f, -249f), new Vector2(236.1f, 102.2f), OnPlayAgainClicked);
 
         CreatePopupButton(boardGO.transform, "HallOfFameBtn", popupHallOfFameSprite,
-            new Vector2(240f, -220f), new Vector2(225f, 55f), OnHallOfFameClicked);
+            new Vector2(254.6f, -247.7f), new Vector2(232.5f, 62.2f), OnHallOfFameClicked);
 
         _submitPopup.SetActive(false);
     }
