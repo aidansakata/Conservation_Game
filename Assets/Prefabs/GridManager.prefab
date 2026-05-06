@@ -138,8 +138,8 @@ MonoBehaviour:
     startCluster: []
     endCluster: []
     optimalPath: []
-  showCellValues: 0
-  valueLabelPrefab: {fileID: 0}
+  showCellValues: 1
+  valueLabelPrefab: {fileID: 6682074001852746365, guid: a21b44072ddc66f44863099a8d4061ed, type: 3}
   labelsParent: {fileID: 0}
   popupBoardSprite: {fileID: 21300000, guid: ff3bc2d42d61d554ab39cd9c418acde6, type: 3}
   popupLogoSprite: {fileID: 21300000, guid: ac9d7cf08c9ad60489425de5d4afe1b1, type: 3}
@@ -150,3 +150,4 @@ MonoBehaviour:
   popupCloseSprite: {fileID: 21300000, guid: 3649c0755b6e1594bbd9ac578fb822eb, type: 3}
   popupButterflySprite: {fileID: 21300000, guid: 5cdc06f61601dec488fc540cd2920f8e, type: 3}
   popupCanvas: {fileID: 0}
+  budgetWarningText: {fileID: 0}
