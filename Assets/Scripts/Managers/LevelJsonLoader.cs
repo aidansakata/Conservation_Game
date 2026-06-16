@@ -95,6 +95,22 @@ public static class LevelJsonLoader
         }
     }
 
+    // Overload mirroring LoadLevelJsonById(baseApiUrl, ...): fetches the catalog
+    // from {baseApiUrl}/levels/catalog.json. Used by CatalogService.
+    public static IEnumerator LoadCatalog(string baseApiUrl, System.Action<string> onSuccess, System.Action<string> onError)
+    {
+        if (string.IsNullOrEmpty(baseApiUrl)) { onError?.Invoke("Empty baseApiUrl"); yield break; }
+
+        string url = baseApiUrl.TrimEnd('/') + "/levels/catalog.json";
+
+        using (var req = UnityWebRequest.Get(url))
+        {
+            yield return req.SendWebRequest();
+            if (req.result != UnityWebRequest.Result.Success) onError?.Invoke(req.error);
+            else onSuccess?.Invoke(req.downloadHandler.text);
+        }
+    }
+
     public static IEnumerator LoadCatalog(System.Action<string> onSuccess, System.Action<string> onError)
     {
         string fileName = "catalog.json";

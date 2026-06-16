@@ -30,6 +30,13 @@ public class GridManager : MonoBehaviour
     [SerializeField] private TextMeshPro valueLabelPrefab;      // world-space TMP (3D) prefab
     [SerializeField] private Transform labelsParent;            // empty parent for labels (optional)
 
+    [Header("Grid Size Presets")]
+    [Tooltip("Per grid-size (width x height) transform for the Grid root. Keyed by loaded dimensions, NOT level number. The camera stays fixed; the grid is hand-placed per size.")]
+    [SerializeField] private List<GridSizePreset> gridSizePresets = new List<GridSizePreset>
+    {
+        new GridSizePreset { width = 8, height = 8, gridScale = new Vector3(2f, 2f, 2f), gridPosition = new Vector3(40.3f, 19.1f, -5f) },
+    };
+
     private readonly List<TextMeshPro> spawnedLabels = new();
     private GameTiles tilesManager;
     private LevelDefinition def;
@@ -87,102 +94,101 @@ public class GridManager : MonoBehaviour
 
         CreateSubmitPopup();
 
-        // Prefer string-based selected id when present (set by LevelSelectController)
-        if (!string.IsNullOrEmpty(GameState.SelectedLevelId))
+        string baseUrl = GetBaseUrl();
+
+        // Path A: a concrete composite id (level-<N>_landscape_<n>) was selected.
+        // Fetch it directly.
+        if (!string.IsNullOrEmpty(GameState.SelectedLevelId)
+            && CatalogService.TryParseLevel(GameState.SelectedLevelId, out int parsedLevel))
         {
-            var cfg = Resources.Load<ApiConfig>("ApiConfig");
-            var baseUrl = cfg != null ? cfg.baseApiUrl : "";
-            if (!string.IsNullOrEmpty(baseUrl))
-            {
-                _isLoading = true;
-                StartCoroutine(LevelJsonLoader.LoadLevelJsonById(baseUrl, GameState.SelectedLevelId, (json) => {
-                    try
-                    {
-                        ProcessLoadedJson(json);
-                    }
-                    catch (System.Exception ex)
-                    {
-                        Debug.LogWarning($"JSON load failed for id '{GameState.SelectedLevelId}': {ex.Message}. Falling back to numeric level {GameState.SelectedLevel}.");
-                        LoadLevel(GameState.SelectedLevel);
-                    }
-                    finally
-                    {
-                        _isLoading = false;
-                    }
-                }, (err) => {
-                    Debug.LogWarning($"JSON load failed for id '{GameState.SelectedLevelId}': {err}. Falling back to numeric level {GameState.SelectedLevel}.");
-                    _isLoading = false;
-                    LoadLevel(GameState.SelectedLevel);
-                }));
-
-                return; // avoid running numeric flow below
-            }
-            else
-            {
-                Debug.LogWarning("ApiConfig not found or baseApiUrl empty. Falling back to numeric level.");
-            }
-        }
-
-        currentLevelNumber = Mathf.Clamp(GameState.SelectedLevel, 1, 5);
-        LoadLevel(GameState.SelectedLevel);
-    }
-
-    public void LoadLevel(int levelNumber)
-    {
-        _isLoading = true;
-        currentLevelNumber = Mathf.Clamp(levelNumber, 1, 5);
-        GameState.SelectedLevel = currentLevelNumber;
-
-        // --- NEW VARIATION LOGIC START ---
-        if (currentLevelNumber == 1)
-        {
-            var cfg = Resources.Load<ApiConfig>("ApiConfig");
-            string baseUrl = (cfg != null) ? cfg.baseApiUrl.Trim().TrimEnd('/') : "http://127.0.0.1:4000";
-
-            int variation = Random.Range(1, 101);
-            string levelId = $"landscape_{variation}";
-
-            Debug.Log($"[GridManager] Requesting variation: {levelId} from {baseUrl}");
-
-            StartCoroutine(LevelJsonLoader.LoadLevelJsonById(baseUrl, levelId,
-                (json) =>
-                {
-                    try { ProcessLoadedJson(json); }
-                    catch (System.Exception ex)
-                    {
-                        Debug.LogWarning($"JSON parse failed for {levelId}: {ex.Message}. Falling back.");
-                        LoadLevelFallback(currentLevelNumber);
-                    }
-                },
-                (err) =>
-                {
-                    Debug.LogWarning($"Failed to load {levelId} from {baseUrl}: {err}. Falling back.");
-                    LoadLevelFallback(currentLevelNumber);
-                }
-            ));
+            _isLoading = true;
+            currentLevelNumber = parsedLevel;
+            GameState.SelectedLevel = parsedLevel;
+            StartCoroutine(FetchAndProcess(baseUrl, GameState.SelectedLevelId, parsedLevel));
             return;
         }
 
-        StartCoroutine(LevelJsonLoader.LoadLevelJson(
-            currentLevelNumber,
-            onLoaded: (json) =>
-            {
-                try { ProcessLoadedJson(json); }
-                catch (System.Exception ex)
-                {
-                    Debug.LogWarning($"JSON parse failed for level {currentLevelNumber}: {ex.Message}. Falling back.");
-                    LoadLevelFallback(currentLevelNumber);
-                }
-            },
-            onError: (err) =>
-            {
-                Debug.Log($"No JSON found for level {currentLevelNumber} ({err}). Falling back.");
-                LoadLevelFallback(currentLevelNumber);
-            }
-        ));
+        // Path B: route the numeric level through the catalog (load-once,
+        // clamp to the catalog's level range, pick a random landscape for it).
+        StartCoroutine(LoadLevelFlow(GameState.SelectedLevel, baseUrl));
     }
 
-    private void ProcessLoadedJson(string json)
+    // Routes a numeric level request through the catalog flow (Path B).
+    public void LoadLevel(int levelNumber)
+    {
+        StartCoroutine(LoadLevelFlow(levelNumber, GetBaseUrl()));
+    }
+
+    // Path B: ensure catalog -> clamp to [MinLevel, MaxLevel] -> pick a random
+    // landscape for the level -> write composite id to GameState -> fetch it.
+    private IEnumerator LoadLevelFlow(int requestedLevel, string baseUrl)
+    {
+        _isLoading = true;
+
+        bool ready = false;
+        yield return CatalogService.EnsureLoaded(baseUrl,
+            () => ready = true,
+            (err) => Debug.LogWarning(
+                $"[LevelLoad] FALLBACK: catalog load failed ({err}). Using local fallback grid for level {requestedLevel}."));
+
+        if (!ready)
+        {
+            currentLevelNumber = Mathf.Max(1, requestedLevel);
+            GameState.SelectedLevel = currentLevelNumber;
+            _isLoading = false;
+            LoadLevelFallback(currentLevelNumber);
+            yield break;
+        }
+
+        int level = Mathf.Clamp(requestedLevel, CatalogService.MinLevel, CatalogService.MaxLevel);
+        currentLevelNumber = level;
+        GameState.SelectedLevel = level;
+
+        string id = CatalogService.PickRandomLandscapeId(level);
+        if (string.IsNullOrEmpty(id))
+        {
+            Debug.LogWarning($"[LevelLoad] FALLBACK: no catalog landscapes for level {level}. Using local fallback grid.");
+            _isLoading = false;
+            LoadLevelFallback(level);
+            yield break;
+        }
+
+        GameState.SelectedLevelId = id;
+        yield return FetchAndProcess(baseUrl, id, level);
+    }
+
+    // Fetches a composite id and processes it, with explicit fallback logging
+    // so a fallback grid can never masquerade as a real load.
+    private IEnumerator FetchAndProcess(string baseUrl, string id, int levelForFallback)
+    {
+        yield return LevelJsonLoader.LoadLevelJsonById(baseUrl, id,
+            (json) =>
+            {
+                try { ProcessLoadedJson(json, id); }
+                catch (System.Exception ex)
+                {
+                    Debug.LogWarning($"[LevelLoad] FALLBACK: parse failed for id '{id}': {ex.Message}. Using local fallback grid for level {levelForFallback}.");
+                    LoadLevelFallback(levelForFallback);
+                }
+            },
+            (err) =>
+            {
+                Debug.LogWarning($"[LevelLoad] FALLBACK: fetch failed for id '{id}' ({err}). Using local fallback grid for level {levelForFallback}.");
+                LoadLevelFallback(levelForFallback);
+            });
+
+        _isLoading = false;
+    }
+
+    private static string GetBaseUrl()
+    {
+        var cfg = Resources.Load<ApiConfig>("ApiConfig");
+        return (cfg != null && !string.IsNullOrEmpty(cfg.baseApiUrl))
+            ? cfg.baseApiUrl.Trim().TrimEnd('/')
+            : "http://127.0.0.1:4000";
+    }
+
+    private void ProcessLoadedJson(string json, string loadedId)
     {
         var lj = JsonUtility.FromJson<LevelJson>(json);
         var d = LevelDefinitionMapper.FromJson(lj);
@@ -195,6 +201,7 @@ public class GridManager : MonoBehaviour
         }
 
         PrepareDefinition(d, currentLevelNumber);
+        Debug.Log($"[LevelLoad] OK {loadedId} (w={d.width},h={d.height})");
         LoadComplete(d, currentLevelNumber);
     }
 
@@ -252,6 +259,18 @@ public class GridManager : MonoBehaviour
     public void ReloadCurrent()
     {
         _revealedHints.Clear();
+
+        // Replay the exact same landscape when we have its composite id (so Play
+        // Again / reset stays on the same board); otherwise route through the
+        // catalog for a fresh pick.
+        if (!string.IsNullOrEmpty(GameState.SelectedLevelId)
+            && CatalogService.TryParseLevel(GameState.SelectedLevelId, out _))
+        {
+            _isLoading = true;
+            StartCoroutine(FetchAndProcess(GetBaseUrl(), GameState.SelectedLevelId, currentLevelNumber));
+            return;
+        }
+
         LoadLevel(currentLevelNumber);
     }
 
@@ -285,7 +304,8 @@ public class GridManager : MonoBehaviour
         Debug.Log("[GridManager] Level reset. Landscape unchanged.");
     }
 
-    public void NextLevel() => LoadLevel(Mathf.Clamp(currentLevelNumber + 1, 1, 5));
+    // Catalog flow clamps to the real [MinLevel, MaxLevel] range, so no 1..5 clamp here.
+    public void NextLevel() => LoadLevel(currentLevelNumber + 1);
 
     public void StartLevelById(string levelId)
     {
@@ -297,7 +317,7 @@ public class GridManager : MonoBehaviour
 
         StartCoroutine(LevelJsonLoader.LoadLevelJsonById(baseUrl, levelId, (json) =>
         {
-            try { ProcessLoadedJson(json); }
+            try { ProcessLoadedJson(json, levelId); }
             catch (System.Exception ex)
             {
                 Debug.LogWarning($"JSON parse failed for level id {levelId}: {ex.Message}. Falling back.");
@@ -323,11 +343,11 @@ public class GridManager : MonoBehaviour
 
         if (ecoCount == 0) Debug.LogError("CRITICAL: EcoData1 is EMPTY. Tiles will have 0 Value.");
 
+        ApplyGridPresetForSize(def.width, def.height);
         PaintTiles(def);
         ApplyToWorldTiles(def);
         if (showCellValues && valueLabelPrefab != null) SpawnValueLabels(def);
         else ClearValueLabels();
-        if (levelNumber != -1) ConfigureCameraForLevel(levelNumber);
 
         InitializeLogicGrid(def);
         _isLoading = false;
@@ -582,28 +602,33 @@ public class GridManager : MonoBehaviour
         spawnedLabels.Clear();
     }
 
-    private void ConfigureCameraForLevel(int levelNumber)
+    // Hand-places the Grid root per loaded SIZE (width x height), NOT level number.
+    // The camera is fixed (never moved in code); each grid size is positioned/scaled so it
+    // falls within the authored camera view. Unmatched sizes are left untouched (no guessing).
+    private void ApplyGridPresetForSize(int width, int height)
     {
-        var cam = Camera.main;
-        if (cam == null) return;
+        if (tilemap == null) return;
 
-        switch (levelNumber)
+        // The Grid component sits on the parent of the Tilemap; that parent is the root we move/scale.
+        Transform gridRoot = tilemap.transform.parent;
+        if (gridRoot == null)
         {
-            case 1:
-                cam.transform.position = new Vector3(46f, 23f, -37.3f);
-                cam.orthographicSize = 15f;
-                break;
-            case 2:
-                cam.transform.position = new Vector3(49f, 25.3f, -37.3f);
-                cam.orthographicSize = 18f;
-                break;
-            case 3:
-                cam.transform.position = new Vector3(52f, 27f, -37.3f);
-                cam.orthographicSize = 22f;
-                break;
-            default:
-                break;
+            Debug.LogWarning($"[GridPreset] Tilemap has no parent Grid root; cannot place {width}x{height}.");
+            return;
         }
+
+        foreach (var preset in gridSizePresets)
+        {
+            if (preset != null && preset.width == width && preset.height == height)
+            {
+                gridRoot.localScale = preset.gridScale;
+                gridRoot.localPosition = preset.gridPosition;
+                Debug.Log($"[GridPreset] Applied {width}x{height}: scale={preset.gridScale}, pos={preset.gridPosition}.");
+                return;
+            }
+        }
+
+        Debug.LogWarning($"[GridPreset] No preset for size {width}x{height}; leaving Grid transform unchanged.");
     }
 
     private void CreateSubmitPopup()
@@ -875,4 +900,15 @@ public class TileTypeEntry
 {
     public string typeName;
     public TileBase tile;
+}
+
+// Per grid-size transform for the Grid root. Matched by loaded width x height
+// (NOT level number). The camera is fixed; each size is hand-placed in the Inspector.
+[System.Serializable]
+public class GridSizePreset
+{
+    public int width;
+    public int height;
+    public Vector3 gridScale;
+    public Vector3 gridPosition;
 }

@@ -7,7 +7,7 @@ public class LevelSelectController : MonoBehaviour
     public int defaultNumericLevel = 1;
 
     [Tooltip("Optional: default level id if buttons don’t pass one")]
-    public string defaultLevelId = "landscape_1";
+    public string defaultLevelId = null;
 
     // --- USE THIS FUNCTION FOR YOUR LEVEL 1 BUTTON ---
     public void SelectLevel(int n)
