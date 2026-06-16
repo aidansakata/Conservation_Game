@@ -102,7 +102,21 @@ app.post('/admin/levels/upload', upload.single('file'), async (req: Request, res
       return res.status(400).json({ error: 'invalid_json' });
     }
 
-    const entries = normalizeModelJsonToLevelJsons(model);
+    // derive level identity from the blocks' `level` field (source of truth, not the filename)
+    const blocks = Object.values(model).filter((b) => b && typeof b === 'object') as any[];
+    const firstLevel = blocks.length > 0 ? blocks[0].level : undefined;
+    if (firstLevel == null || typeof firstLevel !== 'number' || !Number.isFinite(firstLevel)) {
+      return res.status(400).json({ error: 'no numeric level field found in uploaded blocks' });
+    }
+    const levelValues = new Set(blocks.map((b) => b.level));
+    if (levelValues.size > 1) {
+      return res
+        .status(400)
+        .json({ error: `mixed level values in upload: found ${[...levelValues].map((v) => String(v)).join(', ')}` });
+    }
+    const levelId = String(firstLevel);
+
+    const entries = normalizeModelJsonToLevelJsons(model, levelId);
     if (!entries || entries.length === 0) return res.status(400).json({ error: 'no_levels_found' });
 
     const written: string[] = [];
@@ -120,9 +134,16 @@ app.post('/admin/levels/upload', upload.single('file'), async (req: Request, res
       .filter((f) => f.toLowerCase().endsWith('.json') && f !== 'catalog.json');
 
     files.sort((a, b) => {
-      const numA = Number((a.match(/(\d+)\.json$/i) ?? [, '0'])[1]);
-      const numB = Number((b.match(/(\d+)\.json$/i) ?? [, '0'])[1]);
-      return numA - numB;
+      const ma = a.match(/^level-(\d+)_landscape_(\d+)\.json$/i);
+      const mb = b.match(/^level-(\d+)_landscape_(\d+)\.json$/i);
+      // filenames that don't match the prefixed pattern sort last
+      if (!ma && !mb) return 0;
+      if (!ma) return 1;
+      if (!mb) return -1;
+      const levelA = Number(ma[1]);
+      const levelB = Number(mb[1]);
+      if (levelA !== levelB) return levelA - levelB;
+      return Number(ma[2]) - Number(mb[2]);
     });
 
     const allEntries: { id: string; width: number; height: number; budget: number; path: string }[] = [];

@@ -15,7 +15,7 @@ export interface Catalog { levels: CatalogEntry[] }
 
 const asInt = (v: any) => (Number.isFinite(v) ? Number(v) : 0);
 
-export function normalizeModelJsonToLevelJsons(model: any): { key: string; level: LevelJson }[] {
+export function normalizeModelJsonToLevelJsons(model: any, levelId: string): { key: string; level: LevelJson }[] {
   if (!model || typeof model !== 'object') throw new Error('invalid_model');
 
   const out: { key: string; level: LevelJson }[] = [];
@@ -79,7 +79,7 @@ export function normalizeModelJsonToLevelJsons(model: any): { key: string; level
       optUtil,        // carried as metadata; safe to ignore in Unity
     };
 
-    out.push({ key, level });
+    out.push({ key: `level-${levelId}_${key}`, level });
   }
 
   return out;
