@@ -19,6 +19,9 @@ public class WorldTile
 
     public string Name { get; set; }
 
+    // Terrain type key (lowercased), stamped from level data in ApplyToWorldTiles. Used to restore the original tile.
+    public string Type;
+
     // Below is needed for Breadth First Searching
 	
     public bool IsExplored { get; set; }

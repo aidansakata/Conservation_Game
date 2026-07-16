@@ -29,6 +29,9 @@ public class GridManager : MonoBehaviour
     [SerializeField] private bool showCellValues = true;
     [SerializeField] private TextMeshPro valueLabelPrefab;      // world-space TMP (3D) prefab
     [SerializeField] private Transform labelsParent;            // empty parent for labels (optional)
+    [SerializeField] private float costLabelFontSize = 2.0f;    // cost label size (tune in Inspector)
+    [SerializeField] private float hintLabelFontSize = 2.4f;    // hint label size (tune in Inspector)
+    [SerializeField] private TileBase goldTile;                 // optimal-corridor highlight tile (assign in Inspector)
 
     [Header("Grid Size Presets")]
     [Tooltip("Per grid-size (width x height) transform for the Grid root. Keyed by loaded dimensions, NOT level number. The camera stays fixed; the grid is hand-placed per size.")]
@@ -280,6 +283,10 @@ public class GridManager : MonoBehaviour
     {
         if (_currentDef == null || tilesManager == null) return;
 
+        // Restore the full board terrain from level data (re-locks flags via each tile asset)
+        // before the tint-clear loop below re-unlocks and whites them out.
+        PaintTiles(_currentDef);
+
         foreach (var tile in tilesManager.tiles.Values)
         {
             if (tile.Purchased)
@@ -414,11 +421,11 @@ public class GridManager : MonoBehaviour
 
                 if (valueLabelPrefab != null)
                 {
-                    var label = Instantiate(valueLabelPrefab, labelsParent ? labelsParent : transform);
+                    var label = Instantiate(valueLabelPrefab, labelsParent ? labelsParent : tilemap.transform.parent);
                     label.transform.position = tile.TilemapMember.GetCellCenterWorld(tile.LocalPlace) + new Vector3(0, 0, -1);
                     label.text = "HINT";
                     label.color = Color.yellow;
-                    label.fontSize = 6;
+                    label.fontSize = hintLabelFontSize;
                     Destroy(label.gameObject, 3f);
                 }
                 Debug.Log($"Hint highlighted at: {hintPos}");
@@ -562,11 +569,31 @@ public class GridManager : MonoBehaviour
             string tileTypeStr = (d.tileTypes != null && idx < d.tileTypes.Count)
                 ? d.tileTypes[idx].Trim().ToLower()
                 : "forest";
+            wTile.Type = tileTypeStr;
             if (tileTypeStr == "habitat" || tileTypeStr == "road")
                 wTile.Locked = true;
             else
                 wTile.Locked = false;
         }
+    }
+
+    // Repaints one cell back to its original terrain tile from level data (via _tileTypeMap, the same
+    // source PaintTiles uses). Unlocks the cell's color flags so subsequent SetColor tints apply.
+    public void RestoreTileVisual(WorldTile tile)
+    {
+        if (tile == null || string.IsNullOrEmpty(tile.Type)) return;
+        if (_tileTypeMap != null && _tileTypeMap.TryGetValue(tile.Type, out var t) && t != null)
+        {
+            tile.TilemapMember.SetTile(tile.LocalPlace, t);
+            tile.TilemapMember.SetTileFlags(tile.LocalPlace, TileFlags.None);
+        }
+    }
+
+    // Public accessor so callers (e.g. TileFunctions) can resolve a tile by type without exposing _tileTypeMap.
+    public TileBase GetTypeTile(string type)
+    {
+        if (_tileTypeMap != null && !string.IsNullOrEmpty(type) && _tileTypeMap.TryGetValue(type, out var t)) return t;
+        return null;
     }
 
     private void SpawnValueLabels(LevelDefinition d)
@@ -580,15 +607,15 @@ public class GridManager : MonoBehaviour
                 int val = (d.ecoData1 != null && idx < d.ecoData1.Count) ? d.ecoData1[idx] : 0;
                 var cell = new Vector3Int(x, y, 0);
                 var world = tilemap.GetCellCenterWorld(cell);
-                var label = Instantiate(valueLabelPrefab, labelsParent ? labelsParent : transform);
+                var label = Instantiate(valueLabelPrefab, labelsParent ? labelsParent : tilemap.transform.parent);
                 label.transform.position = world;
                 label.text = val.ToString();
                 label.alignment = TextAlignmentOptions.Center;
                 var tmp = label.GetComponent<TextMeshPro>();
                 if (tmp != null)
                 {
-                    tmp.fontSize = 5f;
-                    tmp.color = Color.red;
+                    tmp.fontSize = costLabelFontSize;
+                    tmp.color = Color.white;
                     tmp.fontStyle = FontStyles.Bold;
                     tmp.outlineWidth = 0.3f;
                     tmp.outlineColor = Color.black;
@@ -827,6 +854,9 @@ public class GridManager : MonoBehaviour
         if (_submitPopup != null) _submitPopup.SetActive(false);
         if (_currentDef == null || tilesManager == null) return;
 
+        // Restore all terrain first, so purchased-blue tiles don't multiply the highlight tints.
+        PaintTiles(_currentDef);
+
         int correct = 0, wrong = 0, missed = 0;
         foreach (var kv in tilesManager.tiles)
         {
@@ -850,7 +880,7 @@ public class GridManager : MonoBehaviour
                 }
                 else if (isOptimal && !isSelected)
                 {
-                    tile.TilemapMember.SetColor(tile.LocalPlace, new Color(0f, 0.4f, 1f, 1f));
+                    if (goldTile != null) tile.TilemapMember.SetTile(tile.LocalPlace, goldTile);
                     missed++;
                 }
                 else

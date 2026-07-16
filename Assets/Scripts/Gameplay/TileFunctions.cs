@@ -99,16 +99,14 @@ public class TileFunctions : MonoBehaviour
         List<Vector3Int> neighbors = GetNeighborPositions(tile.LocalPlace);
         var tiles = GameTiles.instance.tiles;
 
-        // CRITICAL FIX: Unlock flags immediately upon interaction
-        tile.TilemapMember.SetTileFlags(tile.LocalPlace, TileFlags.None);
-
         // CASE 1: BUY
         if (!tile.Purchased)
         {
             if (tile.Cost <= GameTiles.instance.budget)
             {
-                // Visuals
-                tile.TilemapMember.SetColor(tile.LocalPlace, Color.magenta);
+                // Visuals: paint the purchased cell as the habitat tile
+                var habitatTile = GridManager.instance != null ? GridManager.instance.GetTypeTile("habitat") : null;
+                if (habitatTile != null) tile.TilemapMember.SetTile(tile.LocalPlace, habitatTile);
                 tile.Purchased = true;
 
                 // Math
@@ -146,8 +144,8 @@ public class TileFunctions : MonoBehaviour
         // CASE 2: SELL
         else
         {
-            // Visuals
-            tile.TilemapMember.SetColor(tile.LocalPlace, Color.white);
+            // Visuals: restore the original terrain tile
+            if (GridManager.instance != null) GridManager.instance.RestoreTileVisual(tile);
             tile.Purchased = false;
 
             // Math
