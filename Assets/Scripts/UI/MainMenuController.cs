@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class MainMenuController : MonoBehaviour
 {
@@ -7,7 +8,11 @@ public class MainMenuController : MonoBehaviour
     public void GoToLevelTemplate() => SceneLoader.LoadLevelTemplate();
 
     // Placeholders for future WebGL routing; safe in Editor/Standalone.
-    public void OpenHowTo()  { Debug.Log("TODO: Open /how-to (web)"); }
+    public void OpenHowTo()
+    {
+        GameState.PatchesReturnScene = SceneManager.GetActiveScene().name;
+        SceneLoader.LoadPatches();
+    }
     public void OpenAbout()  { SceneLoader.LoadPatches(); }
     public void OpenHallOfFame() { Debug.Log("TODO: Open /hall-of-fame (web)"); }
 }

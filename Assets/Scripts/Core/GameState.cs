@@ -4,6 +4,7 @@ public static class GameState
     public static int SelectedLevel = 1;
     public static string SelectedLevelId = "";
     public static string SelectedTileType = "";
+    public static string PatchesReturnScene = "";
 }
 
 

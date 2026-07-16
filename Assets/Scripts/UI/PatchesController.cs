@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PatchesController : MonoBehaviour
 {
@@ -38,8 +39,15 @@ public class PatchesController : MonoBehaviour
         SceneLoader.LoadSinglePatch();
     }
 
+    public void OnHamburgerClicked()
+    {
+        Debug.Log("[Patches] Hamburger clicked - menu overlay not yet implemented");
+    }
+
     public void OnBackClicked()
     {
-        SceneLoader.LoadMainMenu();
+        string target = GameState.PatchesReturnScene;
+        if (string.IsNullOrEmpty(target)) target = "Game-Interface";
+        SceneManager.LoadScene(target);
     }
 }
