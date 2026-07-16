@@ -39,11 +39,6 @@ public class PatchesController : MonoBehaviour
         SceneLoader.LoadSinglePatch();
     }
 
-    public void OnHamburgerClicked()
-    {
-        Debug.Log("[Patches] Hamburger clicked - menu overlay not yet implemented");
-    }
-
     public void OnBackClicked()
     {
         string target = GameState.PatchesReturnScene;
