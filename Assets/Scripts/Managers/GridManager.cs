@@ -34,7 +34,9 @@ public class GridManager : MonoBehaviour
     [Tooltip("Per grid-size (width x height) transform for the Grid root. Keyed by loaded dimensions, NOT level number. The camera stays fixed; the grid is hand-placed per size.")]
     [SerializeField] private List<GridSizePreset> gridSizePresets = new List<GridSizePreset>
     {
-        new GridSizePreset { width = 8, height = 8, gridScale = new Vector3(2f, 2f, 2f), gridPosition = new Vector3(40.3f, 19.1f, -5f) },
+        new GridSizePreset { width = 8,  height = 8,  gridScale = new Vector3(6f, 6f, 6f),       gridPosition = new Vector3(25.7f, 9.3f, -5f) },
+        new GridSizePreset { width = 10, height = 10, gridScale = new Vector3(4.8f, 4.8f, 4.8f), gridPosition = new Vector3(25f, 9f, -5f) },
+        new GridSizePreset { width = 12, height = 12, gridScale = new Vector3(4f, 4f, 4f),       gridPosition = new Vector3(25f, 9f, -5f) },
     };
 
     private readonly List<TextMeshPro> spawnedLabels = new();
