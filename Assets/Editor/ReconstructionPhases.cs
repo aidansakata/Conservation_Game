@@ -14,7 +14,9 @@ using UnityEngine.UI;
 public static class ReconPhases
 {
     static Color Cream = new Color(1f, 1f, 1f, 1f);
-    static Color Brown = new Color(0.36f, 0.20f, 0.09f, 1f);
+    // Sampled straight out of the baked references so text matches the art.
+    static Color BodyBrown = new Color(153f / 255f, 77f / 255f, 12f / 255f, 1f);   // body copy
+    static Color HeadOrange = new Color(214f / 255f, 126f / 255f, 44f / 255f, 1f); // patch headings
     static Color DarkBrown = new Color(0.30f, 0.16f, 0.06f, 1f);
 
     // =====================================================================  R-1
@@ -90,8 +92,9 @@ public static class ReconPhases
         ReconBuild.Img(stage, "Bee",   A + "bee.png", 518, 163, 89, 91);
         ReconBuild.Img(stage, "Board", A + "board-how-to-play.png", 689, 0, 1121, 978);
 
-        // Title cap on the board + body copy, transcribed verbatim from the baked ref.
-        ReconBuild.Text(stage, "Title", "How to Play", 1063, 40, 430, 100, 20, 72,
+        // Title cap + body copy, transcribed verbatim from HowToPlay_Baked.png.
+        // Boxes are measured text bounding boxes (white / RGB(153,77,12) pixel scan).
+        ReconBuild.Text(stage, "Title", "How to Play", 1107, 62, 373, 60, 24, 66,
             TextAlignmentOptions.Center, Cream);
 
         ReconBuild.Text(stage, "Body",
@@ -100,10 +103,9 @@ public static class ReconPhases
             "Click on a patch to add it to your path and click again to remove it.\n\n" +
             "Watch your patch budget and score as you build Pawl’s path!\n\n" +
             "Each patch gives you points based on how good it is. Help Pawl reach his destination while earning the highest score possible!",
-            905, 185, 800, 650, 14, 30, TextAlignmentOptions.TopLeft, Brown);
+            917, 198, 748, 634, 14, 32, TextAlignmentOptions.TopLeft, BodyBrown);
 
         var hamb = ReconBuild.Btn(stage, "Hamburger Button", A + "hamburger-icon.png", "", 40, 977, 69, 70);
-        hamb.GetComponentInChildren<TextMeshProUGUI>(true).text = " ";
 
         var playBtn = ReconBuild.Btn(stage, "Play Button", A + "button.png", "PLAY", 808, 915, 284, 108);
         var nextBtn = ReconBuild.Btn(stage, "Next Button", A + "button.png", "Next", 1475, 915, 284, 108);

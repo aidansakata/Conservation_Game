@@ -308,7 +308,7 @@ public static class ReconBuild
     // ---------------------------------------------------------------- verify
     public class VerifyResult
     {
-        public int notUnderStage, pointAnchors, nonZeroOffsets, buttonsNoLabel, nullRefs, refsChecked, elements;
+        public int notUnderStage, pointAnchors, nonZeroOffsets, buttonsNoLabel, iconOnly, nullRefs, refsChecked, elements;
         public List<string> detail = new List<string>();
     }
 
@@ -357,7 +357,12 @@ public static class ReconBuild
         foreach (var b in stage.GetComponentsInChildren<Button>(true))
         {
             var t = b.GetComponentInChildren<TextMeshProUGUI>(true);
-            if (t == null || string.IsNullOrEmpty(t.text)) { r.buttonsNoLabel++; r.detail.Add("BUTTON NO LABEL: " + HPath(b.transform)); }
+            if (t != null && !string.IsNullOrEmpty(t.text)) continue;
+            // A button carrying a sprite and no text is an icon button (hamburger, close,
+            // patch tile). That is by design, not a missing label -- counted separately.
+            var im = b.GetComponent<Image>();
+            if (im != null && im.sprite != null) { r.iconOnly++; r.detail.Add("ICON-ONLY (no label, by design): " + HPath(b.transform)); }
+            else { r.buttonsNoLabel++; r.detail.Add("BUTTON NO LABEL: " + HPath(b.transform)); }
         }
 
         // Serialized object references on every project MonoBehaviour in the scene
@@ -418,7 +423,7 @@ public static class ReconBuild
         Log(string.Format("CHECK not parented to Stage: {0} -> {1}", r.notUnderStage, r.notUnderStage == 0 ? "PASS" : "FAIL"));
         Log(string.Format("CHECK point anchors:         {0} -> {1}", r.pointAnchors, r.pointAnchors == 0 ? "PASS" : "FAIL"));
         Log(string.Format("CHECK non-zero offsets:      {0} -> {1}", r.nonZeroOffsets, r.nonZeroOffsets == 0 ? "PASS" : "FAIL"));
-        Log(string.Format("CHECK buttons w/o label:     {0} -> {1}", r.buttonsNoLabel, r.buttonsNoLabel == 0 ? "PASS" : "FAIL"));
+        Log(string.Format("CHECK buttons w/o label:     {0} -> {1}   (icon-only, exempt: {2})", r.buttonsNoLabel, r.buttonsNoLabel == 0 ? "PASS" : "FAIL", r.iconOnly));
         Log(string.Format("CHECK serialized refs: {0} checked, {1} null", r.refsChecked, r.nullRefs));
         foreach (var d in r.detail) Log("   " + d);
         Log("CHECK baked refs imported: " + CountBakedImported() + " -> " + (CountBakedImported() == 0 ? "PASS" : "FAIL"));
