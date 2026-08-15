@@ -190,6 +190,289 @@ public static class ReconPass2
         ReconBuild.DumpLog("S-4 Hamburger");
     }
 
+    // ==================================================================== S-5
+    const float VP_X = 490f, VP_Y = 98f, VP_W = 963f, VP_H = 889f;   // measured playfield
+
+    [MenuItem("Tools/Recon2/S-5 Setup Grid Registration")]
+    public static void S5_Setup()
+    {
+        ReconBuild.ResetLog();
+        EditorSceneManager.OpenScene("Assets/Scenes/Game-Interface.unity");
+
+        var canvasGo = ReconBuild.Find("Canvas");
+        var canvas = canvasGo.GetComponent<Canvas>();
+        var stage = ReconBuild.FindDeep(canvasGo.transform, "Stage");
+        ReconBuild.Log("Canvas renderMode=" + canvas.renderMode + " worldCamera=" +
+                       (canvas.worldCamera != null ? canvas.worldCamera.name : "none") + " (untouched)");
+
+        // ---- S-5a: GridViewport marker over the board playfield ----
+        var vpGo = ReconBuild.Child(stage, "GridViewport");
+        ReconBuild.AnchorPx(vpGo, VP_X, VP_Y, VP_W, VP_H);
+        foreach (var g in vpGo.GetComponents<Graphic>()) Object.DestroyImmediate(g);
+        var vpRt = vpGo.GetComponent<RectTransform>();
+        ReconBuild.Log(string.Format("GridViewport px({0},{1},{2},{3})  anchors min({4:0.0000},{5:0.0000}) max({6:0.0000},{7:0.0000})  no Graphic",
+            VP_X, VP_Y, VP_W, VP_H, vpRt.anchorMin.x, vpRt.anchorMin.y, vpRt.anchorMax.x, vpRt.anchorMax.y));
+
+        // ---- S-5c: LetterboxCamera behind everything ----
+        var mainCam = Camera.main != null ? Camera.main : ReconBuild.Find("Main Camera").GetComponent<Camera>();
+        var lbGo = ReconBuild.Find("LetterboxCamera");
+        if (lbGo == null) lbGo = new GameObject("LetterboxCamera");
+        var lb = lbGo.GetComponent<Camera>(); if (lb == null) lb = lbGo.AddComponent<Camera>();
+        lb.orthographic = true;
+        lb.rect = new Rect(0, 0, 1, 1);
+        lb.clearFlags = CameraClearFlags.SolidColor;
+        lb.backgroundColor = new Color(26f / 255f, 26f / 255f, 26f / 255f, 1f);
+        lb.cullingMask = 0;                       // Nothing
+        lb.depth = mainCam.depth - 1f;            // strictly lower than Main Camera
+        var al = lbGo.GetComponent<AudioListener>(); if (al != null) Object.DestroyImmediate(al);
+        lbGo.transform.position = new Vector3(mainCam.transform.position.x, mainCam.transform.position.y, mainCam.transform.position.z);
+        ReconBuild.Log(string.Format("LetterboxCamera rect(0,0,1,1) clear=SolidColor #1A1A1A cullingMask=Nothing depth={0} (Main Camera depth={1})",
+            lb.depth, mainCam.depth));
+
+        // ---- S-5b: the fitter, on its own object so Main Camera's GO is untouched ----
+        var fitGo = ReconBuild.Find("GridViewportFitter");
+        if (fitGo == null) fitGo = new GameObject("GridViewportFitter");
+        var fit = fitGo.GetComponent<GridViewportFitter>();
+        if (fit == null) fit = fitGo.AddComponent<GridViewportFitter>();
+
+        var tilemap = Object.FindObjectOfType<UnityEngine.Tilemaps.Tilemap>(true);
+        var so = new SerializedObject(fit);
+        so.FindProperty("targetCamera").objectReferenceValue = mainCam;
+        so.FindProperty("viewportRect").objectReferenceValue = vpRt;
+        so.FindProperty("canvasRect").objectReferenceValue = canvasGo.GetComponent<RectTransform>();
+        so.FindProperty("tilemap").objectReferenceValue = tilemap;
+        so.ApplyModifiedPropertiesWithoutUndo();
+        foreach (var f in new[] { "targetCamera", "viewportRect", "canvasRect", "tilemap" })
+        {
+            var v = new SerializedObject(fit).FindProperty(f).objectReferenceValue;
+            ReconBuild.Log("   fitter." + f + " = " + (v != null ? v.name : "NULL <<<"));
+        }
+
+        ReconBuild.Log("Main Camera BEFORE: rect=" + mainCam.rect + " orthoSize=" + mainCam.orthographicSize +
+                       " pos=" + mainCam.transform.position + " clearFlags=" + mainCam.clearFlags +
+                       " cullingMask=" + mainCam.cullingMask);
+
+        ReconBuild.SaveActive();
+        ReconBuild.DumpLog("S-5 Setup");
+    }
+
+    [MenuItem("Tools/Recon2/S-5d Clear Authored Tilemap")]
+    public static void S5d_ClearTilemap()
+    {
+        ReconBuild.ResetLog();
+        EditorSceneManager.OpenScene("Assets/Scenes/Game-Interface.unity");
+        var tm = Object.FindObjectOfType<UnityEngine.Tilemaps.Tilemap>(true);
+        if (tm == null) { ReconBuild.Log("no Tilemap found"); ReconBuild.DumpLog("S-5d"); return; }
+        tm.CompressBounds();
+        ReconBuild.Log("authored cellBounds BEFORE: " + tm.cellBounds + "  tiles=" + CountTiles(tm));
+        tm.ClearAllTiles();
+        tm.CompressBounds();
+        ReconBuild.Log("authored cellBounds AFTER : " + tm.cellBounds + "  tiles=" + CountTiles(tm));
+        ReconBuild.SaveActive();
+        ReconBuild.DumpLog("S-5d Clear Tilemap");
+    }
+
+    static int CountTiles(UnityEngine.Tilemaps.Tilemap tm)
+    {
+        int n = 0; var b = tm.cellBounds;
+        foreach (var p in b.allPositionsWithin) if (tm.GetTile(p) != null) n++;
+        return n;
+    }
+
+    /// Renders the scene to a RenderTexture at a given size so camera.rect is honoured,
+    /// then writes a PNG. The Scene view uses its own camera and would not show this.
+    [MenuItem("Tools/Recon2/S-5e Capture Aspects")]
+    public static void S5e_Capture()
+    {
+        ReconBuild.ResetLog();
+        EditorSceneManager.OpenScene("Assets/Scenes/Game-Interface.unity");
+        string dir = System.Environment.GetEnvironmentVariable("TEMP") + "/recon_shots";
+        System.IO.Directory.CreateDirectory(dir);
+
+        var cams = Object.FindObjectsOfType<Camera>(true);
+        System.Array.Sort(cams, (a, b) => a.depth.CompareTo(b.depth));
+
+        var sizes = new (string name, int w, int h)[] {
+            ("16x9",  1600, 900), ("16x10", 1600, 1000),
+            ("4x3",   1200, 900), ("ultrawide", 2560, 1080),
+        };
+
+        foreach (var (name, w, h) in sizes)
+        {
+            var rt = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32);
+            rt.Create();
+            foreach (var c in cams) { c.targetTexture = rt; }
+            // let [ExecuteAlways] re-fit for this target size
+            foreach (var f in Object.FindObjectsOfType<GridViewportFitter>(true)) f.SendMessage("OnEnable", SendMessageOptions.DontRequireReceiver);
+            Canvas.ForceUpdateCanvases();
+            foreach (var c in cams) if (c.enabled && c.gameObject.activeInHierarchy) c.Render();
+
+            var prev = RenderTexture.active;
+            RenderTexture.active = rt;
+            var tex = new Texture2D(w, h, TextureFormat.RGB24, false);
+            tex.ReadPixels(new Rect(0, 0, w, h), 0, 0);
+            tex.Apply();
+            RenderTexture.active = prev;
+            System.IO.File.WriteAllBytes(dir + "/" + name + ".png", tex.EncodeToPNG());
+            Object.DestroyImmediate(tex);
+
+            var mc = Camera.main;
+            ReconBuild.Log(string.Format("{0,-10} {1}x{2}  MainCam rect={3} orthoSize={4:0.000} pos={5}",
+                name, w, h, mc.rect, mc.orthographicSize, mc.transform.position));
+
+            foreach (var c in cams) c.targetTexture = null;
+            rt.Release(); Object.DestroyImmediate(rt);
+        }
+        ReconBuild.Log("PNGs written to " + dir);
+        ReconBuild.DumpLog("S-5e Capture");
+    }
+
+    /// Real screen capture. Works in Play mode (and in Edit mode for the Game view),
+    /// unlike the RenderTexture route, which does not resize a Screen Space - Camera canvas.
+    [MenuItem("Tools/Recon2/S-5e Screenshot Now")]
+    public static void S5e_Shot()
+    {
+        string dir = System.Environment.GetEnvironmentVariable("TEMP") + "/recon_shots";
+        System.IO.Directory.CreateDirectory(dir);
+        string tag = Application.isPlaying ? "play" : "edit";
+        string path = dir + "/real_" + tag + "_" + Screen.width + "x" + Screen.height + ".png";
+        ScreenCapture.CaptureScreenshot(path);
+        var mc = Camera.main;
+        Debug.Log(string.Format("[Recon] SHOT {0}  Screen={1}x{2}  MainCam rect={3} orthoSize={4:0.000} pos={5} " +
+                                "clearFlags={6} cullingMask={7}",
+            path, Screen.width, Screen.height, mc.rect, mc.orthographicSize, mc.transform.position,
+            mc.clearFlags, mc.cullingMask));
+    }
+
+    /// Reports what the fitter computes for a hypothetical screen size, and where the
+    /// board playfield lands in the same normalized space -- a numeric registration test
+    /// that does not depend on rendering.
+    [MenuItem("Tools/Recon2/S-5e Numeric Aspect Check")]
+    public static void S5e_Numeric()
+    {
+        ReconBuild.ResetLog();
+        EditorSceneManager.OpenScene("Assets/Scenes/Game-Interface.unity");
+        var canvasRt = ReconBuild.Find("Canvas").GetComponent<RectTransform>();
+        var stage = ReconBuild.FindDeep(canvasRt.transform, "Stage") as RectTransform;
+        var vp = ReconBuild.FindDeep(canvasRt.transform, "GridViewport") as RectTransform;
+
+        ReconBuild.Log("Simulating Stage's AspectRatioFitter (FitInParent 1.7778) by hand:");
+        ReconBuild.Log("screen        stageRect(px)          GridViewport normalized rect");
+        foreach (var (name, w, h) in new (string, float, float)[] {
+            ("16:9", 1920, 1080), ("16:10", 1920, 1200), ("4:3", 1440, 1080), ("21:9 ultra", 2560, 1080) })
+        {
+            // CanvasScaler ScaleWithScreenSize, match 0.5 -> canvas size in reference units
+            float logW = 1920f, logH = 1080f;
+            float scale = Mathf.Pow(w / logW, 0.5f) * Mathf.Pow(h / logH, 0.5f);
+            float cw = w / scale, chh = h / scale;
+            // Stage fits 1.7778 inside canvas
+            float sw, sh;
+            if (cw / chh > 1.7778f) { sh = chh; sw = chh * 1.7778f; }
+            else { sw = cw; sh = cw / 1.7778f; }
+            // GridViewport is a fixed fraction of Stage
+            float u0 = (cw - sw) * 0.5f + VP_X / 1920f * sw;
+            float u1 = (cw - sw) * 0.5f + (VP_X + VP_W) / 1920f * sw;
+            float v1 = (chh - sh) * 0.5f + (1f - VP_Y / 1080f) * sh;
+            float v0 = (chh - sh) * 0.5f + (1f - (VP_Y + VP_H) / 1080f) * sh;
+            ReconBuild.Log(string.Format("{0,-11} canvas {1,6:0}x{2,-6:0} stage {3,6:0}x{4,-6:0}  rect=({5:0.0000},{6:0.0000},{7:0.0000},{8:0.0000})",
+                name, cw, chh, sw, sh, u0 / cw, v0 / chh, (u1 - u0) / cw, (v1 - v0) / chh));
+        }
+        ReconBuild.DumpLog("S-5e Numeric Aspect Check");
+    }
+
+    /// Decisive, cheap check: for a Screen Space - Camera canvas Unity renders the UI into
+    /// the camera's pixelRect. If canvas.pixelRect follows the driven sub-rect, the whole UI
+    /// collapses into the board region and the approach cannot target that camera.
+    [MenuItem("Tools/Recon2/S-5 Canvas Coupling Check")]
+    public static void S5_CanvasCoupling()
+    {
+        ReconBuild.ResetLog();
+        EditorSceneManager.OpenScene("Assets/Scenes/Game-Interface.unity");
+        var canvas = ReconBuild.Find("Canvas").GetComponent<Canvas>();
+        var mc = Camera.main;
+        var saved = mc.rect;
+        mc.rect = new Rect(0.2552f, 0.0861f, 0.5016f, 0.8231f);   // force the driven sub-rect
+        Canvas.ForceUpdateCanvases();
+        ReconBuild.Log("Screen                = " + Screen.width + "x" + Screen.height);
+        ReconBuild.Log("Main Camera.rect      = " + mc.rect);
+        ReconBuild.Log("Main Camera.pixelRect = " + mc.pixelRect);
+        ReconBuild.Log("Canvas.renderMode     = " + canvas.renderMode + "  worldCamera=" +
+                       (canvas.worldCamera != null ? canvas.worldCamera.name : "none"));
+        ReconBuild.Log("Canvas.pixelRect      = " + canvas.pixelRect);
+        var crt = canvas.GetComponent<RectTransform>();
+        ReconBuild.Log("Canvas RectTransform  = " + crt.rect.size);
+        bool collapsed = Mathf.Abs(canvas.pixelRect.width - mc.pixelRect.width) < 2f &&
+                         Mathf.Abs(canvas.pixelRect.width - Screen.width) > 2f;
+        ReconBuild.Log(collapsed
+            ? ">>> UI COLLAPSED: canvas follows the camera sub-rect. Cannot drive this camera."
+            : ">>> UI INDEPENDENT: canvas still spans the full screen.");
+        mc.rect = saved;
+        Canvas.ForceUpdateCanvases();
+        ReconBuild.DumpLog("S-5 Canvas Coupling");
+    }
+
+    /// Leaves S-5 in a safe, fully-wired state. The fitter is authored and referenced but
+    /// DISABLED, because driving Main Camera's rect collapses the UI (measured: canvas.pixelRect
+    /// == camera.pixelRect). Enabling it requires a change this pass is not allowed to make.
+    [MenuItem("Tools/Recon2/S-5 Finalize Safe State")]
+    public static void S5_Finalize()
+    {
+        ReconBuild.ResetLog();
+        EditorSceneManager.OpenScene("Assets/Scenes/Game-Interface.unity");
+
+        var mc = Camera.main;
+        mc.rect = new Rect(0, 0, 1, 1);
+        mc.orthographicSize = 28f;
+        mc.transform.position = new Vector3(48f, 27f, -37.3f);
+        ReconBuild.Log("Main Camera restored to authored state: rect=" + mc.rect +
+                       " orthoSize=" + mc.orthographicSize + " pos=" + mc.transform.position);
+        ReconBuild.Log("   clearFlags=" + mc.clearFlags + " cullingMask=" + mc.cullingMask + " (never modified)");
+
+        var fit = Object.FindObjectOfType<GridViewportFitter>(true);
+        if (fit != null)
+        {
+            fit.enabled = false;
+            ReconBuild.Log("GridViewportFitter present and fully wired, but DISABLED (see report).");
+            foreach (var f in new[] { "targetCamera", "viewportRect", "canvasRect", "tilemap" })
+            {
+                var v = new SerializedObject(fit).FindProperty(f).objectReferenceValue;
+                ReconBuild.Log("   " + f + " = " + (v != null ? v.name : "NULL <<<"));
+            }
+        }
+
+        var lb = ReconBuild.Find("LetterboxCamera");
+        if (lb != null)
+        {
+            var c = lb.GetComponent<Camera>();
+            ReconBuild.Log("LetterboxCamera depth=" + c.depth + " rect=" + c.rect +
+                           " clear=" + c.clearFlags + " mask=" + c.cullingMask +
+                           " (Main Camera depth=" + mc.depth + ")");
+        }
+
+        var vp = ReconBuild.FindDeep(ReconBuild.Find("Canvas").transform, "GridViewport") as RectTransform;
+        if (vp != null)
+            ReconBuild.Log("GridViewport anchors min(" + vp.anchorMin.x.ToString("0.0000") + "," + vp.anchorMin.y.ToString("0.0000") +
+                           ") max(" + vp.anchorMax.x.ToString("0.0000") + "," + vp.anchorMax.y.ToString("0.0000") +
+                           ") offsets " + vp.offsetMin + vp.offsetMax);
+
+        // S-5d: safe -- PaintTiles() clears and repaints from level data before
+        // RebuildFromTilemap() reads the tilemap (GridManager 356-357, 529-530, 544).
+        var tm = Object.FindObjectOfType<UnityEngine.Tilemaps.Tilemap>(true);
+        if (tm != null)
+        {
+            tm.CompressBounds();
+            int before = CountTiles(tm);
+            tm.ClearAllTiles();
+            tm.CompressBounds();
+            ReconBuild.Log("S-5d authored tiles cleared: " + before + " -> " + CountTiles(tm) +
+                           "   cellBounds now " + tm.cellBounds);
+        }
+
+        ReconBuild.Verify();
+        ReconBuild.SaveActive();
+        ReconBuild.DumpLog("S-5 Finalize");
+    }
+
     // ============================================================ S-1b apply
     [MenuItem("Tools/Recon2/S-1b Fix Popup Close")]
     public static void S1b_FixPopupClose()
