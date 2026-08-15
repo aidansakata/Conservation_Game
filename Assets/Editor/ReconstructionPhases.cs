@@ -216,6 +216,77 @@ public static class ReconPhases
             TextAlignmentOptions.TopLeft, BodyBrown);
     }
 
+    // =====================================================================  R-4
+    [MenuItem("Tools/Recon/R-4 SinglePatch")]
+    public static void R4_SinglePatch()
+    {
+        ReconBuild.ResetLog();
+        EditorSceneManager.OpenScene("Assets/Scenes/Single Patch.unity");
+
+        ReconBuild.ImportFolder("Single Patch Scene", "SinglePatch");
+        const string A = ReconBuild.ReconRoot + "/SinglePatch/";
+        const string T = "Assets/Art/Tiles/";
+
+        var stage = ReconBuild.BuildSkeleton(A + "Background.jpg", true);
+        ReconBuild.PurgeCanvasChildren();
+
+        // Shadow sits behind the hexagon. patch-shadow.png has NO fully-opaque
+        // pixels, so it could not be template-matched -- this box is an estimate.
+        ReconBuild.Img(stage, "Patch Shadow", A + "patch-shadow.png", 126, 751, 472, 119);
+
+        // Dynamic tile image. Bounds edge-detected on both axes from the baked
+        // reference: 469x522 == 2.04x the native 228x259 tile.
+        var patchImg = ReconBuild.Img(stage, "Patch Image", T + "Patches-forest.png", 128, 288, 469, 522);
+
+        ReconBuild.Img(stage, "Board", A + "Board.png", 742, 3, 1136, 911);
+        ReconBuild.Img(stage, "Title Board", A + "title-board.png", 163, 0, 402, 179);
+        ReconBuild.Img(stage, "Bird", A + "bird.png", 547, 214, 137, 124);
+
+        // Dynamic text, driven at runtime by SinglePatchController.
+        // Design-time strings transcribed verbatim from Single Patch_Baked.jpg.
+        var nameT = ReconBuild.Text(stage, "Tile Name", "Forest", 212, 90, 300, 58, 16, 46,
+            TextAlignmentOptions.Center, Cream);
+        var scoreT = ReconBuild.Text(stage, "Tile Score", "Score: 80-100", 878, 182, 620, 50, 16, 44,
+            TextAlignmentOptions.TopLeft, DarkBrown);
+        var descT = ReconBuild.Text(stage, "Tile Description",
+            "Forests are the Florida panther’s home. They give panthers places to hunt for food, hide, and raise their kittens safely. Deer, hogs, and other animals that panthers eat also live in the forest, so panthers depend on these places for their meals. Panthers need big, connected forests so they can move around without getting trapped or crossing busy roads. Protecting Florida’s forests helps keep the panther safe and gives it the space and food it needs to survive.",
+            878, 281, 828, 490, 12, 30, TextAlignmentOptions.TopLeft, BodyBrown);
+
+        // Go-Back.png already contains the words "Go Back" -- no TMP label.
+        var back = ReconBuild.Btn(stage, "Back Button", A + "Go-Back.png", "", 91, 878, 248, 202);
+        var howTo = ReconBuild.Btn(stage, "How to Play Button", A + "How-to-play.png", "How to Play", 734, 927, 284, 108);
+        var about = ReconBuild.Btn(stage, "About Button", A + "About.png", "About", 1579, 927, 284, 108);
+
+        var ui = ReconBuild.Find("MainMenuUI");
+        var spc = ui.GetComponent<SinglePatchController>();
+        var mm = ui.GetComponent<MainMenuController>();
+        ReconBuild.Wire(back,  new UnityAction(spc.OnBackClicked), "SinglePatchController.OnBackClicked");
+        ReconBuild.Wire(howTo, new UnityAction(mm.OpenHowTo),      "MainMenuController.OpenHowTo");
+        ReconBuild.Wire(about, new UnityAction(mm.OpenAbout),      "MainMenuController.OpenAbout");
+
+        // Assign all ten SinglePatchController serialized fields (all were null).
+        var so = new SerializedObject(spc);
+        so.FindProperty("tileNameText").objectReferenceValue = nameT;
+        so.FindProperty("tileScoreRangeText").objectReferenceValue = scoreT;
+        so.FindProperty("tileDescriptionText").objectReferenceValue = descT;
+        so.FindProperty("tileImage").objectReferenceValue = patchImg.GetComponent<Image>();
+        so.FindProperty("forestSprite").objectReferenceValue    = ReconBuild.Sprite(T + "Patches-forest.png");
+        so.FindProperty("citySprite").objectReferenceValue      = ReconBuild.Sprite(T + "Patches-city.png");
+        so.FindProperty("farmlandSprite").objectReferenceValue  = ReconBuild.Sprite(T + "Patches-farmland.png");
+        so.FindProperty("grasslandSprite").objectReferenceValue = ReconBuild.Sprite(T + "Patches-grassland.png");
+        so.FindProperty("habitatSprite").objectReferenceValue   = ReconBuild.Sprite(T + "Patches-habitat.png");
+        so.FindProperty("roadSprite").objectReferenceValue      = ReconBuild.Sprite(T + "Patches-road.png");
+        so.ApplyModifiedPropertiesWithoutUndo();
+        ReconBuild.Log("ASSIGNED 10 SinglePatchController serialized fields (all were NULL before)");
+
+        ReconBuild.Log("!! ART GAP: title-board.png has the word \"Forest\" painted into it, so the " +
+                       "dynamic Tile Name renders on top of a baked word. Needs a text-free sign from Javier.");
+
+        ReconBuild.Verify();
+        ReconBuild.SaveActive();
+        ReconBuild.DumpLog("R-4 SinglePatch");
+    }
+
     [MenuItem("Tools/Recon/Verify Current Scene")]
     public static void VerifyCurrent()
     {
