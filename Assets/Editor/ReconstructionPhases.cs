@@ -19,6 +19,7 @@ public static class ReconPhases
     static Color HeadOrange = new Color(214f / 255f, 126f / 255f, 44f / 255f, 1f); // patch headings
     static Color DarkBrown = new Color(0.30f, 0.16f, 0.06f, 1f);
     static Color TitleBrown = new Color(70f / 255f, 31f / 255f, 0f, 1f);   // LevelSelect title
+    static Color LeafGreen = new Color(169f / 255f, 217f / 255f, 42f / 255f, 1f); // pts / Patches
 
     // =====================================================================  R-1
     [MenuItem("Tools/Recon/R-1 MainMenu")]
@@ -347,6 +348,149 @@ public static class ReconPhases
         ReconBuild.Verify();
         ReconBuild.SaveActive();
         ReconBuild.DumpLog("R-5 LevelSelect");
+    }
+
+    // =====================================================================  R-6
+    // GAMEPLAY IS OFF LIMITS: Grid, Tilemap, GridManager and its serialized refs,
+    // GridSizePreset transforms, Main Camera, EventSystem, post-processing.
+    // The Canvas stays Screen Space - Camera; BuildSkeleton never changes render mode.
+    [MenuItem("Tools/Recon/R-6 GameInterface")]
+    public static void R6_GameInterface()
+    {
+        ReconBuild.ResetLog();
+        EditorSceneManager.OpenScene("Assets/Scenes/Game-Interface.unity");
+
+        ReconBuild.ImportFolder("Game-Interface Scene", "GameInterface");
+        const string A = ReconBuild.ReconRoot + "/GameInterface/";
+
+        var canvasBefore = ReconBuild.Find("Canvas").GetComponent<Canvas>();
+        var modeBefore = canvasBefore.renderMode;
+        var camBefore = canvasBefore.worldCamera;
+
+        var stage = ReconBuild.BuildSkeleton(A + "background.png", false);
+
+        // ---- capture the live gameplay references BEFORE deleting anything ----
+        var gameManager = ReconBuild.Find("GameManager");
+        var tf = gameManager != null ? gameManager.GetComponent<TileFunctions>() : null;
+        var tfSo = tf != null ? new SerializedObject(tf) : null;
+        Font legacyFont = null;
+        if (tfSo != null)
+        {
+            var oldScore = tfSo.FindProperty("scoreText").objectReferenceValue as Text;
+            if (oldScore != null) legacyFont = oldScore.font;
+            ReconBuild.Log("FOUND TileFunctions on GameManager; captured legacy font = " +
+                (legacyFont != null ? legacyFont.name : "NULL"));
+        }
+
+        // Budget Warning is GridManager.budgetWarningText -- GridManager's serialized
+        // refs are off limits, so rescue the object itself rather than re-assigning.
+        var warn = ReconBuild.Find("Budget Warning");
+        if (warn != null)
+        {
+            warn.transform.SetParent(stage, false);
+            ReconBuild.AnchorPx(warn, 610, 470, 700, 110);
+            ReconBuild.Log("RESCUED 'Budget Warning' (GridManager.budgetWarningText) -> Stage, re-anchored");
+        }
+
+        // InfoPanel: inactive, and NOTHING in Assets/Scripts references it. Classification
+        // is 'orphaned legacy UI', so it is carried over untouched rather than deleted.
+        var info = ReconBuild.Find("InfoPanel");
+        if (info != null)
+        {
+            info.transform.SetParent(stage, false);
+            ReconBuild.PreservedRoots.Add("InfoPanel");
+            ReconBuild.Log("PRESERVED 'InfoPanel' untouched (inactive, orphaned, absent from new art) -> reparented to Stage");
+        }
+
+        // ---- new art ----
+        ReconBuild.Img(stage, "Main Board", A + "main-board.png", 400, 0, 1121, 1043);
+        ReconBuild.Img(stage, "Level Score Boards", A + "level-score-boards.png", 0, 0, 401, 568);
+        ReconBuild.Img(stage, "Logo", A + "logo-interface.png", 1561, 91, 336, 232);
+        ReconBuild.Img(stage, "Pawl", A + "pawl-interface.png", 87, 568, 236, 383);
+        ReconBuild.Img(stage, "Grass", A + "grass.png", 1574, 794, 292, 143);
+
+        // ---- values ----
+        // scoreText/budgetText must stay UnityEngine.UI.Text: TileFunctions declares
+        // them as Text and this plan forbids C# changes. So they are legacy Text, not TMP.
+        var scoreGo = ReconBuild.Child(stage, "Score Value");
+        ReconBuild.AnchorPx(scoreGo, 139, 311, 70, 50);
+        var scoreTxt = scoreGo.GetComponent<Text>() ?? scoreGo.AddComponent<Text>();
+        scoreTxt.text = "60"; scoreTxt.color = Cream; scoreTxt.alignment = TextAnchor.MiddleCenter;
+        scoreTxt.font = legacyFont; scoreTxt.fontSize = 40; scoreTxt.resizeTextForBestFit = true;
+        scoreTxt.resizeTextMinSize = 10; scoreTxt.resizeTextMaxSize = 48; scoreTxt.raycastTarget = false;
+
+        var budgetGo = ReconBuild.Child(stage, "Budget Value");
+        ReconBuild.AnchorPx(budgetGo, 134, 436, 69, 50);
+        var budgetTxt = budgetGo.GetComponent<Text>() ?? budgetGo.AddComponent<Text>();
+        budgetTxt.text = "03"; budgetTxt.color = Cream; budgetTxt.alignment = TextAnchor.MiddleCenter;
+        budgetTxt.font = legacyFont; budgetTxt.fontSize = 40; budgetTxt.resizeTextForBestFit = true;
+        budgetTxt.resizeTextMinSize = 10; budgetTxt.resizeTextMaxSize = 48; budgetTxt.raycastTarget = false;
+
+        ReconBuild.Text(stage, "Level Label", "Level 01", 107, 147, 199, 46, 16, 46,
+            TextAlignmentOptions.Center, Cream);
+        ReconBuild.Text(stage, "Pts Label", "pts", 231, 338, 48, 26, 10, 26,
+            TextAlignmentOptions.Center, LeafGreen);
+        ReconBuild.Text(stage, "Patches Label", "Patches", 217, 451, 90, 22, 10, 24,
+            TextAlignmentOptions.Center, LeafGreen);
+
+        // ---- buttons ----
+        var howTo  = ReconBuild.Btn(stage, "How to Play Button", A + "how-to-play-btn.png", "How to Play", 1592, 392, 266, 100);
+        var reset  = ReconBuild.Btn(stage, "Reset Button",       A + "reset-game-btn.png",  "Reset Game",  1592, 508, 266, 101);
+        var hint   = ReconBuild.Btn(stage, "Hint Button",        A + "pawls-hint-btn.png",  "Pawl’s Hint", 1592, 624, 266, 101);
+        var submit = ReconBuild.Btn(stage, "Submit Button",      A + "submit-btn.png",      "SUBMIT",      1582, 896, 286, 109);
+        var hamb   = ReconBuild.Btn(stage, "Hamburger-menu",     A + "hamburger-menu.png",  "",            42, 979, 69, 70);
+
+        var mm = ReconBuild.Find("MainMenuUI").GetComponent<MainMenuController>();
+        ReconBuild.Wire(howTo, new UnityAction(mm.OpenHowTo), "MainMenuController.OpenHowTo");
+        var hmc = Object.FindObjectOfType<HamburgerMenuController>(true);
+        if (hmc != null) ReconBuild.Wire(hamb, new UnityAction(hmc.Toggle), "HamburgerMenuController.Toggle");
+        else ReconBuild.Unwired(hamb, "no HamburgerMenuController found");
+
+        // Reset / Hint / Submit carry no persistent onClick: TileFunctions binds them at
+        // runtime through serialized fields. Restore those to the rebuilt buttons.
+        ReconBuild.Unwired(reset,  "bound at runtime by TileFunctions.resetButton");
+        ReconBuild.Unwired(hint,   "bound at runtime by TileFunctions.hintButton");
+        ReconBuild.Unwired(submit, "bound at runtime by TileFunctions.submitButton");
+
+        // ---- retire the old container ----
+        var old = GameObject.Find("Canvas/Menu container");
+        if (old != null) { Object.DestroyImmediate(old); ReconBuild.Log("DELETED 'Menu container' (old baked bg, covers, panels, hitboxes)"); }
+
+        // ---- restore TileFunctions references to the rebuilt objects ----
+        if (tfSo != null)
+        {
+            tfSo.Update();
+            tfSo.FindProperty("scoreText").objectReferenceValue = scoreTxt;
+            tfSo.FindProperty("budgetText").objectReferenceValue = budgetTxt;
+            tfSo.FindProperty("resetButton").objectReferenceValue = reset.GetComponent<Button>();
+            tfSo.FindProperty("submitButton").objectReferenceValue = submit.GetComponent<Button>();
+            tfSo.FindProperty("hintButton").objectReferenceValue = hint.GetComponent<Button>();
+            tfSo.ApplyModifiedPropertiesWithoutUndo();
+            ReconBuild.Log("RESTORED TileFunctions: scoreText, budgetText, resetButton, submitButton, hintButton");
+            var chk = new SerializedObject(tf);
+            foreach (var f in new[] { "Tilemap", "scoreText", "budgetText", "resetButton", "submitButton", "hintButton" })
+            {
+                var pr = chk.FindProperty(f);
+                ReconBuild.Log(string.Format("   TileFunctions.{0} = {1}", f,
+                    pr != null && pr.objectReferenceValue != null ? pr.objectReferenceValue.name : "NULL <<<"));
+            }
+        }
+
+        var canvasAfter = ReconBuild.Find("Canvas").GetComponent<Canvas>();
+        ReconBuild.Log(string.Format("CANVAS renderMode {0} -> {1} ({2}), camera {3} -> {4}",
+            modeBefore, canvasAfter.renderMode, modeBefore == canvasAfter.renderMode ? "UNCHANGED" : "CHANGED!!",
+            camBefore != null ? camBefore.name : "null",
+            canvasAfter.worldCamera != null ? canvasAfter.worldCamera.name : "null"));
+        ReconBuild.Log("UNTOUCHED: Grid, Tilemap, GridManager (+ all serialized refs), GridSizePreset, Main Camera, EventSystem, globalvolume, MenuOverlay.");
+        ReconBuild.Log("NOTE: the hex grid is world-space, framed by the orthographic Main Camera, while the board art " +
+                       "letterboxes with Stage. At non-16:9 aspects the two can drift apart. Not fixable without touching " +
+                       "the camera or grid, which this phase forbids.");
+        ReconBuild.Log("NOTE: runtime PopupCanvas (GridManager) and MenuOverlay both claim sortingOrder 100. Left as-is.");
+
+        ReconBuild.Verify();
+        ReconBuild.SaveActive();
+        ReconBuild.PreservedRoots.Clear();
+        ReconBuild.DumpLog("R-6 GameInterface");
     }
 
     [MenuItem("Tools/Recon/Verify Current Scene")]

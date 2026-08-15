@@ -324,7 +324,7 @@ public static class ReconBuild
     // ---------------------------------------------------------------- verify
     public class VerifyResult
     {
-        public int notUnderStage, pointAnchors, nonZeroOffsets, buttonsNoLabel, iconOnly, nullRefs, refsChecked, elements;
+        public int notUnderStage, pointAnchors, nonZeroOffsets, buttonsNoLabel, iconOnly, nullRefs, refsChecked, elements, preserved;
         public List<string> detail = new List<string>();
     }
 
@@ -352,6 +352,7 @@ public static class ReconBuild
         foreach (var g in stage.GetComponentsInChildren<Graphic>(true))
         {
             if (g.transform == stage.transform) continue;
+            if (InPreserved(g.transform)) { r.preserved++; continue; }  // legacy subtree kept as-is
             r.elements++;
             var rt = g.rectTransform;
             if (rt.anchorMin == rt.anchorMax) { r.pointAnchors++; r.detail.Add("POINT ANCHOR: " + HPath(rt)); }
@@ -372,6 +373,7 @@ public static class ReconBuild
 
         foreach (var b in stage.GetComponentsInChildren<Button>(true))
         {
+            if (InPreserved(b.transform)) continue;
             var t = b.GetComponentInChildren<TextMeshProUGUI>(true);
             if (t != null && !string.IsNullOrEmpty(t.text)) continue;
             // A button carrying a sprite and no text is an icon button (hamburger, close,
@@ -411,6 +413,7 @@ public static class ReconBuild
         foreach (var g in stage.GetComponentsInChildren<Graphic>(true))
         {
             if (g.transform == stage.transform) continue;
+            if (InPreserved(g.transform)) continue;
             var rt = g.rectTransform;
             string extra = "";
             var im = g as Image;
@@ -435,7 +438,7 @@ public static class ReconBuild
             Log(string.Format("  {0,-26} label=\"{1}\"  -> {2}", b.gameObject.name, lb != null ? lb.text : "<none>", tgt));
         }
 
-        Log(string.Format("CHECK elements under Stage: {0}", r.elements));
+        Log(string.Format("CHECK elements under Stage: {0}   (preserved legacy graphics, excluded: {1})", r.elements, r.preserved));
         Log(string.Format("CHECK not parented to Stage: {0} -> {1}", r.notUnderStage, r.notUnderStage == 0 ? "PASS" : "FAIL"));
         Log(string.Format("CHECK point anchors:         {0} -> {1}", r.pointAnchors, r.pointAnchors == 0 ? "PASS" : "FAIL"));
         Log(string.Format("CHECK non-zero offsets:      {0} -> {1}", r.nonZeroOffsets, r.nonZeroOffsets == 0 ? "PASS" : "FAIL"));
@@ -444,6 +447,17 @@ public static class ReconBuild
         foreach (var d in r.detail) Log("   " + d);
         Log("CHECK baked refs imported: " + CountBakedImported() + " -> " + (CountBakedImported() == 0 ? "PASS" : "FAIL"));
         return r;
+    }
+
+    /// Legacy subtrees carried over untouched (inactive/orphaned gameplay UI).
+    /// Excluded from the anchor checks and reported separately, because
+    /// re-anchoring them would mean redesigning UI this pass does not own.
+    public static readonly List<string> PreservedRoots = new List<string>();
+
+    static bool InPreserved(Transform t)
+    {
+        while (t != null) { if (PreservedRoots.Contains(t.name)) return true; t = t.parent; }
+        return false;
     }
 
     static bool IsInsideOverlayPrefab(Transform t)
