@@ -119,6 +119,103 @@ public static class ReconPhases
         ReconBuild.DumpLog("R-2 HowToPlay");
     }
 
+    // =====================================================================  R-3
+    // Column geometry measured from Patches_Baked.png:
+    //   left text column  x=546 w=392   right text column x=1176 w=445
+    //   heading colour RGB(216,135,44)  body colour RGB(153,77,12)
+    const float LCOL = 546f, LW = 392f, RCOL = 1176f, RW = 445f;
+
+    [MenuItem("Tools/Recon/R-3 Patches")]
+    public static void R3_Patches()
+    {
+        ReconBuild.ResetLog();
+        EditorSceneManager.OpenScene("Assets/Scenes/Patches.unity");
+
+        // The six hex tiles already exist at Assets/Art/Tiles/Patches-*.png (PPU 259)
+        // and are byte-identical to the _ArtDrop copies. Reuse rather than duplicate.
+        ReconBuild.ImportFolder("Patches Scene", "Patches", new[] {
+            "Patches-city.png","Patches-farmland.png","Patches-forest.png",
+            "Patches-grassland.png","Patches-habitat.png","Patches-road.png" });
+
+        const string A = ReconBuild.ReconRoot + "/Patches/";
+        const string T = "Assets/Art/Tiles/";
+
+        var stage = ReconBuild.BuildSkeleton(A + "Background.png", true);
+        ReconBuild.PurgeCanvasChildren();
+
+        ReconBuild.Img(stage, "Board", A + "board-full.png", 259, 2, 1406, 980);
+        ReconBuild.Img(stage, "Bald Eagle", A + "bald-eagle.png", 1704, 756, 180, 274);
+
+        ReconBuild.Text(stage, "Title", "The Patches", 779, 62, 367, 57, 24, 62,
+            TextAlignmentOptions.Center, Cream);
+
+        // Six hexagons. Measured at scale 0.725 of native 228x259 -> 165x188.
+        var city      = ReconBuild.Btn(stage, "City",      T + "Patches-city.png",      "", 349, 192, 165, 188);
+        var grassland = ReconBuild.Btn(stage, "Grassland", T + "Patches-grassland.png", "", 979, 192, 165, 188);
+        var forest    = ReconBuild.Btn(stage, "Forest",    T + "Patches-forest.png",    "", 349, 412, 165, 188);
+        var road      = ReconBuild.Btn(stage, "Road",      T + "Patches-road.png",      "", 979, 413, 165, 188);
+        var farmland  = ReconBuild.Btn(stage, "Farmland",  T + "Patches-farmland.png",  "", 349, 632, 165, 188);
+        var habitat   = ReconBuild.Btn(stage, "Habitats",  T + "Patches-habitat.png",   "", 979, 633, 165, 188);
+
+        // Headings + descriptions, transcribed verbatim from Patches_Baked.png.
+        Cell(stage, "City", "City", LCOL, 212, LW,
+            "Cities are very dangerous for Pawl. They have lots of buildings, roads, cars, and people. City patches make it hard for Pawl to move safely.",
+            255, 92);
+        Cell(stage, "Grassland", "Grassland", RCOL, 210, RW,
+            "Grasslands are important for Pawl because they provide open spaces to hunt. But Pawl prefers forests because they offer better cover and protection.",
+            255, 95);
+        Cell(stage, "Forest", "Forest", LCOL, 433, LW,
+            "Forests are Pawl’s home. They provide places to hunt for food, hide, and stay safe. Pawl needs large, dense forests to survive.",
+            477, 92);
+        Cell(stage, "Road", "Road", RCOL, 432, RW,
+            "Roads are dangerous for Pawl because of fast-moving cars and heavy traffic. Crossing roads can be very risky, so road patches make it harder for Pawl to travel safely.",
+            477, 118);
+        Cell(stage, "Farmland", "Farmland", LCOL, 648, LW,
+            "Farmland is one of the places where Pawl can travel. He may pass through farms and even find food like deer, raccoons, or hogs. But farmland can also be risky because of human activity.",
+            693, 116);
+        Cell(stage, "Habitat", "Habitat", RCOL, 649, RW,
+            "This is a protected, high-quality habitat patch for Pawl. It provides plenty of food, shelter, and safe space to move around. These are some of the best places for Pawl to live.",
+            693, 116);
+
+        var back = ReconBuild.Btn(stage, "Back", A + "btn-board.png", "Back", 332, 915, 284, 108);
+        var play = ReconBuild.Btn(stage, "Play", A + "btn-board.png", "PLAY", 818, 915, 284, 108);
+        var next = ReconBuild.Btn(stage, "Next", A + "btn-board.png", "Next", 1305, 915, 284, 108);
+        var hamb = ReconBuild.Btn(stage, "Hamburger-menu", A + "hamburger-icon.png", "", 40, 977, 69, 70);
+
+        // Replicate bindings exactly as found (R-0 audit).
+        var ui = ReconBuild.Find("LevelSelectUI");
+        var pc = ui.GetComponent<PatchesController>();
+        var mm = ui.GetComponent<MainMenuController>();
+        ReconBuild.Wire(forest,    new UnityAction(pc.OnForestClicked),    "PatchesController.OnForestClicked");
+        ReconBuild.Wire(city,      new UnityAction(pc.OnCityClicked),      "PatchesController.OnCityClicked");
+        ReconBuild.Wire(farmland,  new UnityAction(pc.OnFarmlandClicked),  "PatchesController.OnFarmlandClicked");
+        ReconBuild.Wire(grassland, new UnityAction(pc.OnGrasslandClicked), "PatchesController.OnGrasslandClicked");
+        ReconBuild.Wire(habitat,   new UnityAction(pc.OnHabitatClicked),   "PatchesController.OnHabitatClicked");
+        ReconBuild.Wire(road,      new UnityAction(pc.OnRoadClicked),      "PatchesController.OnRoadClicked");
+        ReconBuild.Wire(back,      new UnityAction(pc.OnBackClicked),      "PatchesController.OnBackClicked");
+        // Known-wrong in the original (OpenAbout reloads Patches). Plan says replicate, do not fix.
+        ReconBuild.Wire(play,      new UnityAction(mm.OpenAbout),          "MainMenuController.OpenAbout  [replicated as-found; known-wrong]");
+
+        var hmc = Object.FindObjectOfType<HamburgerMenuController>(true);
+        if (hmc != null) ReconBuild.Wire(hamb, new UnityAction(hmc.Toggle), "HamburgerMenuController.Toggle");
+        else ReconBuild.Unwired(hamb, "no HamburgerMenuController found in scene");
+
+        ReconBuild.Unwired(next, "was unwired in the original; Next buttons stay unwired");
+
+        ReconBuild.Verify();
+        ReconBuild.SaveActive();
+        ReconBuild.DumpLog("R-3 Patches");
+    }
+
+    static void Cell(RectTransform stage, string key, string heading, float x, float hy, float w,
+                     string body, float by, float bh)
+    {
+        ReconBuild.Text(stage, key + " Heading", heading, x, hy, w, 32f, 14, 34,
+            TextAlignmentOptions.TopLeft, HeadOrange);
+        ReconBuild.Text(stage, key + " Desc", body, x, by, w, bh, 10, 24,
+            TextAlignmentOptions.TopLeft, BodyBrown);
+    }
+
     [MenuItem("Tools/Recon/Verify Current Scene")]
     public static void VerifyCurrent()
     {

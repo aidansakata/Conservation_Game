@@ -44,7 +44,9 @@ public static class ReconBuild
     /// Assets/Art/Reconstruction/<dstName>/ and applies UI sprite import settings.
     /// Baked reference images live at the folder ROOT, not in images/, so they are
     /// never copied. That is the plan's "never import baked references" rule.
-    public static void ImportFolder(string srcFolder, string dstName)
+    public static void ImportFolder(string srcFolder, string dstName) { ImportFolder(srcFolder, dstName, null); }
+
+    public static void ImportFolder(string srcFolder, string dstName, string[] skipNames)
     {
         string src = Path.Combine(ArtDrop, srcFolder, "images");
         if (!Directory.Exists(src)) { Log("IMPORT: no images/ folder for " + srcFolder + " (expected for HamburgerMenu)"); return; }
@@ -59,6 +61,8 @@ public static class ReconBuild
             if (ext != ".png" && ext != ".jpg" && ext != ".jpeg") continue;
             string name = Path.GetFileName(f);
             if (name.ToLowerInvariant().Contains("baked")) { Log("IMPORT: REFUSED baked ref " + name); continue; }
+            if (skipNames != null && System.Array.IndexOf(skipNames, name) >= 0)
+            { Log("IMPORT: skipped " + name + " (reusing existing project asset)"); continue; }
             string target = dst + "/" + name;
             File.Copy(f, target, true);
             n++;
@@ -187,6 +191,18 @@ public static class ReconBuild
             bg.transform.SetSiblingIndex(0);
         }
         return srt;
+    }
+
+    /// Deletes the retired direct children of Canvas (old baked background and
+    /// alpha-0 hitboxes). Letterbox and Stage are the new skeleton and survive.
+    public static void PurgeCanvasChildren()
+    {
+        var canvasGo = Find("Canvas");
+        if (canvasGo == null) return;
+        var doomed = new List<GameObject>();
+        foreach (Transform t in canvasGo.transform)
+            if (t.name != "Letterbox" && t.name != "Stage") doomed.Add(t.gameObject);
+        foreach (var d in doomed) { Log("DELETED retired object: Canvas/" + d.name); UnityEngine.Object.DestroyImmediate(d); }
     }
 
     // ---------------------------------------------------------------- elements
