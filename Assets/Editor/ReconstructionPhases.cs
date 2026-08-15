@@ -18,6 +18,7 @@ public static class ReconPhases
     static Color BodyBrown = new Color(153f / 255f, 77f / 255f, 12f / 255f, 1f);   // body copy
     static Color HeadOrange = new Color(214f / 255f, 126f / 255f, 44f / 255f, 1f); // patch headings
     static Color DarkBrown = new Color(0.30f, 0.16f, 0.06f, 1f);
+    static Color TitleBrown = new Color(70f / 255f, 31f / 255f, 0f, 1f);   // LevelSelect title
 
     // =====================================================================  R-1
     [MenuItem("Tools/Recon/R-1 MainMenu")]
@@ -285,6 +286,67 @@ public static class ReconPhases
         ReconBuild.Verify();
         ReconBuild.SaveActive();
         ReconBuild.DumpLog("R-4 SinglePatch");
+    }
+
+    // =====================================================================  R-5
+    [MenuItem("Tools/Recon/R-5 LevelSelect")]
+    public static void R5_LevelSelect()
+    {
+        ReconBuild.ResetLog();
+        EditorSceneManager.OpenScene("Assets/Scenes/LevelSelect.unity");
+
+        ReconBuild.ImportFolder("LevelSelect Scene", "LevelSelect");
+        const string A = ReconBuild.ReconRoot + "/LevelSelect/";
+
+        var stage = ReconBuild.BuildSkeleton(A + "background.png", true);
+        ReconBuild.PurgeCanvasChildren();
+
+        ReconBuild.Img(stage, "Board", A + "board.png", 731, 1, 1118, 850);
+        ReconBuild.Img(stage, "Pawl Wave", A + "pawl-select-your-level.png", 110, 238, 550, 714);
+        ReconBuild.Img(stage, "Butterfly", A + "butterfly.png", 100, 88, 113, 107);
+        ReconBuild.Img(stage, "Tortoise", A + "turtle.png", 771, 774, 207, 178);
+
+        ReconBuild.Text(stage, "Title", "Select Your Level", 1022, 165, 580, 55, 20, 58,
+            TextAlignmentOptions.Center, TitleBrown);
+        ReconBuild.Text(stage, "Caption 1", "Select a level and begin your adventure with Pawl.",
+            960, 600, 680, 92, 14, 38, TextAlignmentOptions.Top, BodyBrown);
+        ReconBuild.Text(stage, "Caption 2", "Level difficulty increases with the level number.",
+            900, 712, 800, 40, 12, 28, TextAlignmentOptions.Top, BodyBrown);
+
+        // Ten level circles. One 123x123 sprite reused; numerals are TMP.
+        float[] row1 = { 936, 1090, 1246, 1400, 1556 };
+        float[] row2 = { 932, 1088, 1246, 1398, 1554 };
+        var ui = ReconBuild.Find("LevelSelectUI");
+        var lsc = ui.GetComponent<LevelSelectController>();
+
+        for (int i = 0; i < 5; i++)
+        {
+            int n = i + 1;
+            var b = ReconBuild.Btn(stage, "Level " + n, A + "Select-Your-Level-circle.png",
+                n.ToString("00"), row1[i], 274, 123, 123);
+            ReconBuild.WireInt(b, new UnityAction<int>(lsc.OnLevelButtonPressed), n,
+                "LevelSelectController.OnLevelButtonPressed");
+        }
+        for (int i = 0; i < 5; i++)
+        {
+            int n = i + 6;
+            var b = ReconBuild.Btn(stage, "Level " + n, A + "Select-Your-Level-circle.png",
+                n.ToString("00"), row2[i], 437, 123, 123);
+            ReconBuild.WireInt(b, new UnityAction<int>(lsc.OnLevelButtonPressed), n,
+                "LevelSelectController.OnLevelButtonPressed");
+        }
+
+        var hamb = ReconBuild.Btn(stage, "Hamburger-menu", A + "hamburger-icon.png", "", 41, 979, 69, 70);
+        ReconBuild.Unwired(hamb, "no MenuOverlay instance in LevelSelect and no existing binding to replicate");
+
+        ReconBuild.Log("NOTE: the new LevelSelect art has no Home / How to Play / About buttons. " +
+                       "Those three alpha-0 hitboxes (BackToMenu, OpenHowTo, OpenAbout) are retired, " +
+                       "so LevelSelect currently has no route back to MainMenu. Presumed to move into " +
+                       "the hamburger menu, whose four destinations are the deliberately-unresolved question.");
+
+        ReconBuild.Verify();
+        ReconBuild.SaveActive();
+        ReconBuild.DumpLog("R-5 LevelSelect");
     }
 
     [MenuItem("Tools/Recon/Verify Current Scene")]
