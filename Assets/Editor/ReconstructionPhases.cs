@@ -706,6 +706,31 @@ public static class ReconPhases
         ReconBuild.DumpLog("R-8 Overlay Instance Check");
     }
 
+    [MenuItem("Tools/Recon/Verify ALL Scenes")]
+    public static void VerifyAll()
+    {
+        ReconBuild.ResetLog();
+        string[] scenes = {
+            "Assets/Scenes/MainMenu.unity", "Assets/Scenes/HowToPlay.unity",
+            "Assets/Scenes/Patches.unity",  "Assets/Scenes/Single Patch.unity",
+            "Assets/Scenes/LevelSelect.unity", "Assets/Scenes/Game-Interface.unity" };
+        int totFail = 0;
+        foreach (var s in scenes)
+        {
+            EditorSceneManager.OpenScene(s);
+            var r = ReconBuild.Verify();
+            int fail = r.notUnderStage + r.pointAnchors + r.nonZeroOffsets + r.buttonsNoLabel;
+            totFail += fail;
+            ReconBuild.Log(string.Format(">>> {0,-34} elements {1,3} | notUnderStage {2} | pointAnchors {3} | offsets {4} | noLabel {5} | iconOnly {6} | preserved {7} | refs {8} ({9} null) | {10}",
+                System.IO.Path.GetFileNameWithoutExtension(s), r.elements, r.notUnderStage, r.pointAnchors,
+                r.nonZeroOffsets, r.buttonsNoLabel, r.iconOnly, r.preserved, r.refsChecked, r.nullRefs,
+                fail == 0 ? "PASS" : "FAIL"));
+        }
+        ReconBuild.Log("TOTAL zero-tolerance failures across all scenes: " + totFail);
+        ReconBuild.Log("baked reference images inside Assets/: " + ReconBuild.CountBakedImported());
+        ReconBuild.DumpLog("FINAL SWEEP");
+    }
+
     [MenuItem("Tools/Recon/Verify Current Scene")]
     public static void VerifyCurrent()
     {
