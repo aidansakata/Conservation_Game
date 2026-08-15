@@ -328,11 +328,14 @@ public static class ReconBuild
         public List<string> detail = new List<string>();
     }
 
-    public static VerifyResult Verify(bool expectStage = true)
+    public static VerifyResult Verify() { return Verify(Find("Canvas")); }
+
+    /// canvasGo may be a scene Canvas or an overlay-prefab root (R-7 / R-8).
+    public static VerifyResult Verify(GameObject canvasGo)
     {
         var r = new VerifyResult();
-        var stage = Find("Stage");
-        var canvasGo = Find("Canvas");
+        var stageT = canvasGo != null ? canvasGo.transform.Find("Stage") : null;
+        var stage = stageT != null ? stageT.gameObject : Find("Stage");
 
         // CanvasScaler
         var cs = canvasGo != null ? canvasGo.GetComponent<CanvasScaler>() : null;

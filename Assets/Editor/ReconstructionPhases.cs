@@ -20,6 +20,8 @@ public static class ReconPhases
     static Color DarkBrown = new Color(0.30f, 0.16f, 0.06f, 1f);
     static Color TitleBrown = new Color(70f / 255f, 31f / 255f, 0f, 1f);   // LevelSelect title
     static Color LeafGreen = new Color(169f / 255f, 217f / 255f, 42f / 255f, 1f); // pts / Patches
+    static Color ResultsTan = new Color(206f / 255f, 150f / 255f, 65f / 255f, 1f);  // popup 'Results' / 'pts'
+    static Color ScoreBrown = new Color(116f / 255f, 52f / 255f, 8f / 255f, 1f);   // popup score value
 
     // =====================================================================  R-1
     [MenuItem("Tools/Recon/R-1 MainMenu")]
@@ -491,6 +493,95 @@ public static class ReconPhases
         ReconBuild.SaveActive();
         ReconBuild.PreservedRoots.Clear();
         ReconBuild.DumpLog("R-6 GameInterface");
+    }
+
+    // =====================================================================  R-7
+    // The submit popup is built at RUNTIME in GridManager. This authors a prefab
+    // matching the baked reference. GridManager is deliberately NOT modified.
+    [MenuItem("Tools/Recon/R-7 PopupOverlay")]
+    public static void R7_PopupOverlay()
+    {
+        ReconBuild.ResetLog();
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
+        // All eight Pop-Up components already live in Assets/Art/Popup/, are
+        // byte-identical to the _ArtDrop copies, and are already referenced by
+        // GridManager's popup*Sprite fields. Reuse instead of importing a duplicate set.
+        const string P = "Assets/Art/Popup/";
+        ReconBuild.Log("IMPORT: skipped all 8 Pop-Up components -- already present and wired at " + P);
+
+        var root = new GameObject("PopupOverlay", typeof(RectTransform), typeof(Canvas),
+                                  typeof(CanvasScaler), typeof(GraphicRaycaster));
+        var canvas = root.GetComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 100;   // matches the runtime popup it is meant to replace
+        var cs = root.GetComponent<CanvasScaler>();
+        cs.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        cs.referenceResolution = new Vector2(1920f, 1080f);
+        cs.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+        cs.matchWidthOrHeight = 0.5f;
+
+        // An overlay must not hide the scene beneath, so the skeleton's opaque
+        // Letterbox becomes a semi-transparent Scrim. Stage is unchanged.
+        var scrim = ReconBuild.Child(root.transform, "Scrim");
+        ReconBuild.Anchor(scrim, 0, 0, 1, 1);
+        var si = scrim.AddComponent<Image>();
+        si.color = new Color(0f, 0f, 0f, 0.66f);
+        si.raycastTarget = true;
+
+        var stageGo = ReconBuild.Child(root.transform, "Stage");
+        var stage = ReconBuild.Anchor(stageGo, 0, 0, 1, 1);
+        stage.pivot = new Vector2(0.5f, 0.5f);
+        var arf = stageGo.AddComponent<AspectRatioFitter>();
+        arf.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+        arf.aspectRatio = 1.7778f;
+
+        ReconBuild.Img(stage, "Board", P + "Board.png", 274, 13, 1406, 936);
+        ReconBuild.Img(stage, "Logo", P + "Logo.png", 753, 28, 415, 291);
+        ReconBuild.Img(stage, "Pawl Running", P + "Pawl-Running.png", 995, 380, 525, 419);
+        ReconBuild.Img(stage, "Butterfly", P + "Butterfly.png", 1389, 228, 81, 86);
+
+        // Transcribed verbatim from Pop-Up_Baked.jpg; colours sampled from the art.
+        ReconBuild.Text(stage, "Results Heading", "Results", 560, 445, 215, 53, 16, 52,
+            TextAlignmentOptions.Center, ResultsTan);
+        ReconBuild.Text(stage, "Results Caption", "Your corridor was tested by Pawl",
+            487, 521, 360, 80, 14, 36, TextAlignmentOptions.Top, BodyBrown);
+        ReconBuild.Text(stage, "Score Value", "930", 554, 638, 150, 79, 20, 76,
+            TextAlignmentOptions.Right, ScoreBrown);
+        ReconBuild.Text(stage, "Pts Label", "pts", 710, 668, 70, 46, 12, 34,
+            TextAlignmentOptions.Left, ResultsTan);
+
+        // Every Pop-Up plate already contains its own label, so these are icon buttons.
+        var best  = ReconBuild.Btn(stage, "View Best Corridor", P + "view-best-corridor.png", "", 337, 865, 374, 108);
+        var again = ReconBuild.Btn(stage, "Play Again",         P + "play-again.png",         "", 758, 836, 403, 156);
+        var hof   = ReconBuild.Btn(stage, "Add to Hall of Fame",P + "hall-of-fame.png",       "", 1215, 865, 374, 108);
+        var close = ReconBuild.Btn(stage, "Close Button",       P + "Close-Popup.png",        "", 1817, 45, 67, 63);
+
+        ReconBuild.Unwired(best,  "GridManager builds the live popup in code; prefab is not wired to it");
+        ReconBuild.Unwired(again, "as above");
+        ReconBuild.Unwired(hof,   "as above");
+        ReconBuild.Unwired(close, "as above");
+
+        ReconBuild.Verify(root);
+
+        System.IO.Directory.CreateDirectory("Assets/Prefabs/UI");
+        PrefabUtility.SaveAsPrefabAsset(root, "Assets/Prefabs/UI/PopupOverlay.prefab");
+        Object.DestroyImmediate(root);
+        AssetDatabase.Refresh();
+        ReconBuild.Log("SAVED Assets/Prefabs/UI/PopupOverlay.prefab");
+
+        ReconBuild.Log("TO WIRE THIS UP LATER (NOT done -- it is a C# change and out of scope):");
+        ReconBuild.Log("  GridManager.cs CreateSubmitPopup(), lines 663-822, builds the popup by hand.");
+        ReconBuild.Log("  Replace that body with: Instantiate the prefab under popupCanvas.transform,");
+        ReconBuild.Log("  assign _submitPopup = instance, and bind _resultText / _scoreText to the");
+        ReconBuild.Log("  instance's 'Results Caption' and 'Score Value' TMP components; wire the four");
+        ReconBuild.Log("  buttons to OnPlayAgainClicked / OnShowBestCorridorClicked / hall-of-fame / close.");
+        ReconBuild.Log("  The helper CreatePopupButton() (lines ~824-845) then becomes dead code.");
+        ReconBuild.Log("  Until then the prefab does not appear in game. That is expected.");
+        ReconBuild.Log("NOTE: this prefab uses sortingOrder 100, the same value as the runtime PopupCanvas");
+        ReconBuild.Log("  it is meant to replace, and as MenuOverlay. Left as-is per plan.");
+
+        ReconBuild.DumpLog("R-7 PopupOverlay");
     }
 
     [MenuItem("Tools/Recon/Verify Current Scene")]
