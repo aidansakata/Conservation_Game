@@ -102,6 +102,94 @@ public static class ReconPass2
         ReconBuild.DumpLog("S-1b Popup Close Diagnosis");
     }
 
+    // ==================================================================== S-3
+    [MenuItem("Tools/Recon2/S-3 SinglePatch Title + Hexagon")]
+    public static void S3_SinglePatch()
+    {
+        ReconBuild.ResetLog();
+        const string CLEAN = "Assets/Art/Reconstruction/SinglePatch/title-board-clean.png";
+        ReconBuild.ApplySpriteImport(CLEAN);
+        AssetDatabase.Refresh();
+
+        EditorSceneManager.OpenScene("Assets/Scenes/Single Patch.unity");
+        var stage = ReconBuild.FindDeep(ReconBuild.Find("Canvas").transform, "Stage");
+
+        // S-3a: point the sign at the cleaned copy. Original file left untouched.
+        var tb = stage.Find("Title Board").GetComponent<Image>();
+        var before = tb.sprite != null ? tb.sprite.name : "none";
+        tb.sprite = ReconBuild.Sprite(CLEAN);
+        ReconBuild.Log("Title Board sprite: " + before + " -> " + (tb.sprite != null ? tb.sprite.name : "NULL <<<"));
+
+        // S-3b: shadow box re-derived from the ALPHA channel (max alpha 146, never
+        // opaque, so colour matching was impossible). Sprite alpha-centroid (247.0,54.7)
+        // aligned to the hexagon's horizontal centre and base.
+        var shadow = stage.Find("Patch Shadow").gameObject;
+        ReconBuild.AnchorPx(shadow, 116, 755, 472, 119);
+        ReconBuild.Log("Patch Shadow: (126,751,472,119) -> (116,755,472,119)");
+
+        // Hexagon extent re-confirmed by two-axis edge detection on the baked ref.
+        var patch = stage.Find("Patch Image").gameObject;
+        ReconBuild.AnchorPx(patch, 128, 288, 469, 522);
+        ReconBuild.Log("Patch Image: (128,288,469,522) confirmed (scale 2.057 x / 2.016 y of native 228x259)");
+
+        // Confirm the dynamic name is centred over the cleaned region.
+        var nameT = stage.Find("Tile Name").GetComponent<RectTransform>();
+        float cx = (nameT.anchorMin.x + nameT.anchorMax.x) * 0.5f * 1920f;
+        float cy = (1f - (nameT.anchorMin.y + nameT.anchorMax.y) * 0.5f) * 1080f;
+        // cleaned patch rect in sprite space x105..292 y88..146; sign placed at (163,0)
+        ReconBuild.Log(string.Format(
+            "Tile Name centre = ({0:0.0},{1:0.0}); cleaned region centre = ({2:0.0},{3:0.0}) -> offset ({4:0.0},{5:0.0})",
+            cx, cy, 163 + (105 + 292) / 2f, (88 + 146) / 2f,
+            cx - (163 + (105 + 292) / 2f), cy - (88 + 146) / 2f));
+
+        ReconBuild.Verify();
+        ReconBuild.SaveActive();
+        ReconBuild.DumpLog("S-3 SinglePatch");
+    }
+
+    // ==================================================================== S-4
+    [MenuItem("Tools/Recon2/S-4 Hamburger in HowToPlay + LevelSelect")]
+    public static void S4_Hamburger()
+    {
+        ReconBuild.ResetLog();
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/MenuOverlay.prefab");
+
+        var jobs = new (string scene, string btn)[] {
+            ("Assets/Scenes/HowToPlay.unity",   "Hamburger Button"),
+            ("Assets/Scenes/LevelSelect.unity", "Hamburger-menu"),
+        };
+
+        foreach (var (scenePath, btnName) in jobs)
+        {
+            EditorSceneManager.OpenScene(scenePath);
+            ReconBuild.Log("--- " + scenePath);
+
+            var existing = Object.FindObjectOfType<HamburgerMenuController>(true);
+            if (existing == null)
+            {
+                var inst = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+                inst.name = "MenuOverlay";
+                inst.transform.SetParent(null);            // scene root, matching Patches / Game-Interface
+                ReconBuild.Log("   INSTANCED MenuOverlay at scene root");
+            }
+            else ReconBuild.Log("   MenuOverlay already present");
+
+            var hmc = Object.FindObjectOfType<HamburgerMenuController>(true);
+            var panel = new SerializedObject(hmc).FindProperty("panel").objectReferenceValue;
+            ReconBuild.Log("   panel -> " + (panel != null ? panel.name : "NULL <<<") +
+                           "   panel active = " + (panel != null && ((GameObject)panel).activeSelf));
+
+            var stage = ReconBuild.FindDeep(ReconBuild.Find("Canvas").transform, "Stage");
+            var btnT = stage.Find(btnName);
+            if (btnT == null) { ReconBuild.Log("   !! button '" + btnName + "' not found"); continue; }
+            ReconBuild.Wire(btnT.gameObject, new UnityAction(hmc.Toggle), "HamburgerMenuController.Toggle");
+
+            ReconBuild.Verify();
+            ReconBuild.SaveActive();
+        }
+        ReconBuild.DumpLog("S-4 Hamburger");
+    }
+
     // ============================================================ S-1b apply
     [MenuItem("Tools/Recon2/S-1b Fix Popup Close")]
     public static void S1b_FixPopupClose()
