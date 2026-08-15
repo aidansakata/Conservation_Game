@@ -400,7 +400,6 @@ public static class ReconPhases
         if (info != null)
         {
             info.transform.SetParent(stage, false);
-            ReconBuild.PreservedRoots.Add("InfoPanel");
             ReconBuild.Log("PRESERVED 'InfoPanel' untouched (inactive, orphaned, absent from new art) -> reparented to Stage");
         }
 
@@ -491,7 +490,6 @@ public static class ReconPhases
 
         ReconBuild.Verify();
         ReconBuild.SaveActive();
-        ReconBuild.PreservedRoots.Clear();
         ReconBuild.DumpLog("R-6 GameInterface");
     }
 
@@ -582,6 +580,130 @@ public static class ReconPhases
         ReconBuild.Log("  it is meant to replace, and as MenuOverlay. Left as-is per plan.");
 
         ReconBuild.DumpLog("R-7 PopupOverlay");
+    }
+
+    // =====================================================================  R-8
+    // Rebuilt IN PLACE via LoadPrefabContents so the root GameObject and its
+    // HamburgerMenuController keep their fileIDs -- the Patches and Game-Interface
+    // hamburger buttons wire to that component and would otherwise break.
+    [MenuItem("Tools/Recon/R-8 MenuOverlay")]
+    public static void R8_MenuOverlay()
+    {
+        ReconBuild.ResetLog();
+        const string path = "Assets/Prefabs/MenuOverlay.prefab";
+
+        // No images/ folder. Borrows from two other folders (R-0 finding: the logo is
+        // logo-interface.png, NOT logo-welcome.png -- matched exact, MAE 0.00).
+        const string LOGO = ReconBuild.ReconRoot + "/GameInterface/logo-interface.png";
+        const string CLOSE = "Assets/Art/Popup/Close-Popup.png";
+        ReconBuild.Log("IMPORT: none. Borrows " + LOGO + " and " + CLOSE);
+
+        var root = PrefabUtility.LoadPrefabContents(path);
+
+        var hmc = root.GetComponent<HamburgerMenuController>();
+        ReconBuild.Log("PRESERVED HamburgerMenuController on prefab root: " + (hmc != null ? "found" : "MISSING!"));
+
+        var canvas = root.GetComponent<Canvas>();
+        ReconBuild.Log(string.Format("Canvas renderMode={0} sortingOrder={1} (unchanged)", canvas.renderMode, canvas.sortingOrder));
+        var cs = root.GetComponent<CanvasScaler>();
+        if (cs == null) cs = root.AddComponent<CanvasScaler>();
+        cs.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        cs.referenceResolution = new Vector2(1920f, 1080f);
+        cs.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+        cs.matchWidthOrHeight = 0.5f;
+
+        // Clear old contents (Panel/CloseButton) but keep the root intact.
+        var doomed = new System.Collections.Generic.List<GameObject>();
+        foreach (Transform t in root.transform) doomed.Add(t.gameObject);
+        foreach (var d in doomed) { ReconBuild.Log("DELETED old overlay child: " + d.name); Object.DestroyImmediate(d); }
+
+        // Panel is the toggled container -- it must be a CHILD, because disabling the
+        // root would disable HamburgerMenuController and Toggle() could never re-enable it.
+        var panel = ReconBuild.Child(root.transform, "Panel");
+        ReconBuild.Anchor(panel, 0, 0, 1, 1);
+
+        var scrim = ReconBuild.Child(panel.transform, "Scrim");
+        ReconBuild.Anchor(scrim, 0, 0, 1, 1);
+        var si = scrim.GetComponent<Image>() ?? scrim.AddComponent<Image>();
+        si.color = new Color(0f, 0f, 0f, 0.66f);   // measured: RGB ~(83,82,78) over the game art
+        si.raycastTarget = true;
+
+        var stageGo = ReconBuild.Child(panel.transform, "Stage");
+        var stage = ReconBuild.Anchor(stageGo, 0, 0, 1, 1);
+        stage.pivot = new Vector2(0.5f, 0.5f);
+        var arf = stageGo.GetComponent<AspectRatioFitter>() ?? stageGo.AddComponent<AspectRatioFitter>();
+        arf.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+        arf.aspectRatio = 1.7778f;
+
+        ReconBuild.Img(stage, "Logo", LOGO, 55, 62, 336, 232);
+
+        // Four left-aligned text buttons. Boxes are measured white-pixel bounds
+        // (35px tall, 90px pitch, all starting at x=64). Wired to nothing by instruction.
+        float[] ys = { 596, 686, 776, 866 };
+        float[] ws = { 156, 168, 166, 164 };
+        for (int i = 0; i < 4; i++)
+        {
+            var b = ReconBuild.Btn(stage, "Menu 0" + (i + 1), null, "Menu 0" + (i + 1), 64, ys[i], ws[i], 35);
+            var lab = b.GetComponentInChildren<TextMeshProUGUI>(true);
+            lab.alignment = TextAlignmentOptions.Left;
+            lab.color = Cream;
+            lab.margin = Vector4.zero;
+            ReconBuild.Unwired(b, "the four hamburger destinations are a deliberately unresolved decision");
+        }
+
+        var close = ReconBuild.Btn(stage, "CloseButton", CLOSE, "", 43, 984, 67, 63);
+        if (hmc != null) ReconBuild.Wire(close, new UnityAction(hmc.Close), "HamburgerMenuController.Close");
+
+        // Restore the controller's panel reference to the new container.
+        if (hmc != null)
+        {
+            var so = new SerializedObject(hmc);
+            so.FindProperty("panel").objectReferenceValue = panel;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            var chk = new SerializedObject(hmc).FindProperty("panel").objectReferenceValue;
+            ReconBuild.Log("RESTORED HamburgerMenuController.panel -> " + (chk != null ? chk.name : "NULL <<<"));
+        }
+
+        ReconBuild.Verify(root);
+
+        PrefabUtility.SaveAsPrefabAsset(root, path);
+        PrefabUtility.UnloadPrefabContents(root);
+        AssetDatabase.Refresh();
+        ReconBuild.Log("SAVED " + path);
+        ReconBuild.DumpLog("R-8 MenuOverlay");
+    }
+
+    /// Confirms the two scenes that instance MenuOverlay still resolve their
+    /// hamburger onClick after the prefab was rebuilt.
+    [MenuItem("Tools/Recon/R-8 Verify Overlay Instances")]
+    public static void R8_VerifyInstances()
+    {
+        ReconBuild.ResetLog();
+        foreach (var sc in new[] { "Assets/Scenes/Patches.unity", "Assets/Scenes/Game-Interface.unity" })
+        {
+            EditorSceneManager.OpenScene(sc);
+            var hmc = Object.FindObjectOfType<HamburgerMenuController>(true);
+            var panel = hmc != null ? new SerializedObject(hmc).FindProperty("panel").objectReferenceValue : null;
+            ReconBuild.Log(sc);
+            ReconBuild.Log("   HamburgerMenuController: " + (hmc != null ? "present" : "MISSING") +
+                           "   panel -> " + (panel != null ? panel.name : "NULL <<<"));
+            // Scope to the scene Canvas: MenuOverlay now has a "Stage" of its own.
+            var stage = ReconBuild.FindDeep(ReconBuild.Find("Canvas").transform, "Stage");
+            foreach (var b in stage.GetComponentsInChildren<Button>(true))
+            {
+                if (!b.name.ToLower().Contains("hamburger")) continue;
+                int n = b.onClick.GetPersistentEventCount();
+                for (int i = 0; i < n; i++)
+                {
+                    var o = b.onClick.GetPersistentTarget(i);
+                    ReconBuild.Log("   " + b.name + " onClick -> " +
+                        (o != null ? o.GetType().Name : "NULL TARGET <<<") + "." + b.onClick.GetPersistentMethodName(i) + "()");
+                }
+                if (n == 0) ReconBuild.Log("   " + b.name + " onClick -> NONE <<<");
+            }
+            ReconBuild.Verify();   // re-run the full checklist post-prefab-rebuild
+        }
+        ReconBuild.DumpLog("R-8 Overlay Instance Check");
     }
 
     [MenuItem("Tools/Recon/Verify Current Scene")]

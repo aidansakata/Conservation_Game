@@ -126,6 +126,17 @@ public static class ReconBuild
         return Anchor(go, x / 1920f, 1f - (y + h) / 1080f, (x + w) / 1920f, 1f - y / 1080f);
     }
 
+    public static Transform FindDeep(Transform root, string name)
+    {
+        if (root.name == name) return root;
+        foreach (Transform c in root)
+        {
+            var r = FindDeep(c, name);
+            if (r != null) return r;
+        }
+        return null;
+    }
+
     public static GameObject Child(Transform parent, string name)
     {
         var t = parent.Find(name);
@@ -334,7 +345,7 @@ public static class ReconBuild
     public static VerifyResult Verify(GameObject canvasGo)
     {
         var r = new VerifyResult();
-        var stageT = canvasGo != null ? canvasGo.transform.Find("Stage") : null;
+        var stageT = canvasGo != null ? FindDeep(canvasGo.transform, "Stage") : null;
         var stage = stageT != null ? stageT.gameObject : Find("Stage");
 
         // CanvasScaler
@@ -455,7 +466,7 @@ public static class ReconBuild
     /// Legacy subtrees carried over untouched (inactive/orphaned gameplay UI).
     /// Excluded from the anchor checks and reported separately, because
     /// re-anchoring them would mean redesigning UI this pass does not own.
-    public static readonly List<string> PreservedRoots = new List<string>();
+    public static readonly List<string> PreservedRoots = new List<string>() { "InfoPanel" };
 
     static bool InPreserved(Transform t)
     {
