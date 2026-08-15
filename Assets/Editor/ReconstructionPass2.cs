@@ -473,6 +473,134 @@ public static class ReconPass2
         ReconBuild.DumpLog("S-5 Finalize");
     }
 
+    // ============================================ hamburger wiring repair
+    /// HowToPlay and LevelSelect had NO persisted m_OnClick call on the hamburger.
+    /// Patches / Game-Interface do, because their MenuOverlay instance already existed
+    /// when the button was wired. Wiring a nested prefab instance to a component on a
+    /// brand-new prefab instance needs RecordPrefabInstancePropertyModifications, or the
+    /// override is dropped when the scene is written.
+    [MenuItem("Tools/Recon2/FIX Hamburger Wiring")]
+    public static void FixHamburgerWiring()
+    {
+        ReconBuild.ResetLog();
+        var jobs = new (string scene, string btn)[] {
+            ("Assets/Scenes/HowToPlay.unity",   "Hamburger Button"),
+            ("Assets/Scenes/LevelSelect.unity", "Hamburger-menu"),
+        };
+        foreach (var (scenePath, btnName) in jobs)
+        {
+            var sc = EditorSceneManager.OpenScene(scenePath);
+            ReconBuild.Log("--- " + scenePath);
+
+            var hmc = Object.FindObjectOfType<HamburgerMenuController>(true);
+            if (hmc == null) { ReconBuild.Log("   !! no HamburgerMenuController"); continue; }
+
+            var stage = ReconBuild.FindDeep(ReconBuild.Find("Canvas").transform, "Stage");
+            var btnT = stage.Find(btnName);
+            if (btnT == null) { ReconBuild.Log("   !! button '" + btnName + "' missing"); continue; }
+            var btn = btnT.GetComponent<Button>();
+
+            for (int i = btn.onClick.GetPersistentEventCount() - 1; i >= 0; i--)
+                UnityEditor.Events.UnityEventTools.RemovePersistentListener(btn.onClick, i);
+            UnityEditor.Events.UnityEventTools.AddPersistentListener(btn.onClick, new UnityAction(hmc.Toggle));
+
+            // The step that was missing: register the change as a prefab-instance override.
+            if (PrefabUtility.IsPartOfPrefabInstance(btn))
+            {
+                PrefabUtility.RecordPrefabInstancePropertyModifications(btn);
+                ReconBuild.Log("   RecordPrefabInstancePropertyModifications(Button) applied");
+            }
+            EditorUtility.SetDirty(btn);
+            EditorSceneManager.MarkSceneDirty(sc);
+
+            int n = btn.onClick.GetPersistentEventCount();
+            for (int i = 0; i < n; i++)
+            {
+                var t = btn.onClick.GetPersistentTarget(i);
+                ReconBuild.Log(string.Format("   in-memory call[{0}] -> {1}.{2}()  targetIsSceneObject={3}",
+                    i, t != null ? t.GetType().Name : "NULL", btn.onClick.GetPersistentMethodName(i),
+                    t != null && !EditorUtility.IsPersistent(t)));
+            }
+            EditorSceneManager.SaveScene(sc);
+            ReconBuild.Log("   SAVED " + scenePath);
+        }
+        AssetDatabase.SaveAssets();
+        ReconBuild.DumpLog("FIX Hamburger Wiring");
+    }
+
+    /// Play-mode test for the ACTIVE scene: raycasts at the icon through the real
+    /// GraphicRaycaster, dispatches a pointer click, and reads the panel state.
+    [MenuItem("Tools/Recon2/PLAYTEST Hamburger (active scene)")]
+    public static void PlaytestHamburger()
+    {
+        ReconBuild.ResetLog();
+        string scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        ReconBuild.Log("SCENE: " + scene + "   isPlaying=" + Application.isPlaying);
+
+        var hmc = Object.FindObjectOfType<HamburgerMenuController>(true);
+        var panelProp = hmc != null ? new SerializedObject(hmc).FindProperty("panel").objectReferenceValue : null;
+        var panel = panelProp as GameObject;
+        ReconBuild.Log("  controller=" + (hmc != null ? "present" : "MISSING") +
+                       "  panel=" + (panel != null ? panel.name : "NULL"));
+        ReconBuild.Log("  1) ON LOAD panel.activeSelf = " + (panel != null && panel.activeSelf) + "   (want False)");
+
+        var stage = ReconBuild.FindDeep(ReconBuild.Find("Canvas").transform, "Stage");
+        Button icon = null;
+        foreach (var b in stage.GetComponentsInChildren<Button>(true))
+            if (b.name.ToLower().Contains("hamburger")) { icon = b; break; }
+        if (icon == null) { ReconBuild.Log("  !! hamburger button not found"); ReconBuild.DumpLog("PLAYTEST " + scene); return; }
+
+        int n = icon.onClick.GetPersistentEventCount();
+        for (int i = 0; i < n; i++)
+        {
+            var t = icon.onClick.GetPersistentTarget(i);
+            ReconBuild.Log(string.Format("  wiring: call[{0}] -> {1}.{2}()  isPersistentAsset={3}",
+                i, t != null ? t.GetType().Name : "NULL", icon.onClick.GetPersistentMethodName(i),
+                t != null && EditorUtility.IsPersistent(t)));
+        }
+        if (n == 0) ReconBuild.Log("  wiring: NO PERSISTENT CALLS <<<");
+
+        // Real raycast through the GraphicRaycaster at the icon's screen centre.
+        var rt = icon.GetComponent<RectTransform>();
+        var cam = ReconBuild.Find("Canvas").GetComponent<Canvas>().worldCamera;
+        Vector2 screenPt = RectTransformUtility.WorldToScreenPoint(cam, rt.TransformPoint(rt.rect.center));
+        if (UnityEngine.EventSystems.EventSystem.current != null)
+        {
+            var ped = new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current) { position = screenPt };
+            var hits = new System.Collections.Generic.List<UnityEngine.EventSystems.RaycastResult>();
+            UnityEngine.EventSystems.EventSystem.current.RaycastAll(ped, hits);
+            ReconBuild.Log("  raycast at " + screenPt + " -> " + hits.Count + " hits; top = " +
+                           (hits.Count > 0 ? hits[0].gameObject.name : "none"));
+            bool reaches = hits.Count > 0 && (hits[0].gameObject == icon.gameObject || hits[0].gameObject.transform.IsChildOf(icon.transform));
+            ReconBuild.Log("  2) icon is topmost hit = " + reaches + "   (want True)");
+            if (hits.Count > 0)
+                UnityEngine.EventSystems.ExecuteEvents.Execute(hits[0].gameObject, ped, UnityEngine.EventSystems.ExecuteEvents.pointerClickHandler);
+        }
+        else ReconBuild.Log("  !! EventSystem.current is null");
+
+        ReconBuild.Log("  3) AFTER icon click panel.activeSelf = " + (panel != null && panel.activeSelf) + "   (want True)");
+
+        // Close via the X inside THIS overlay. Must be scoped to the panel subtree:
+        // GridManager.cs:736 creates a second runtime GameObject also named "CloseButton"
+        // for the submit popup, so an unscoped search picks the wrong one in Game-Interface.
+        Button close = null;
+        if (panel != null)
+            foreach (var b in panel.GetComponentsInChildren<Button>(true))
+                if (b.name == "CloseButton") { close = b; break; }
+        int dupes = 0;
+        foreach (var b in Object.FindObjectsOfType<Button>(true)) if (b.name == "CloseButton") dupes++;
+        ReconBuild.Log("  CloseButton objects in scene = " + dupes + " (scoped to overlay panel: " +
+                       (close != null ? ReconBuild.HPath(close.transform) : "NOT FOUND") + ")");
+        if (close != null)
+        {
+            close.onClick.Invoke();
+            ReconBuild.Log("  4) AFTER X click  panel.activeSelf = " + (panel != null && panel.activeSelf) + "   (want False)");
+        }
+        else ReconBuild.Log("  !! CloseButton not found");
+
+        ReconBuild.DumpLog("PLAYTEST " + scene);
+    }
+
     // ============================================================ S-1b apply
     [MenuItem("Tools/Recon2/S-1b Fix Popup Close")]
     public static void S1b_FixPopupClose()

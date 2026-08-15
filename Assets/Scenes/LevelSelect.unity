@@ -702,7 +702,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4278198086
   m_fontColor: {r: 0.27450982, g: 0.12156863, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -715,12 +715,12 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
+  m_fontSize: 49.2
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -974,7 +974,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4278996377
   m_fontColor: {r: 0.6, g: 0.3019608, b: 0.047058824, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -987,12 +987,12 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
+  m_fontSize: 38
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -1053,6 +1053,26 @@ PrefabInstance:
     - target: {fileID: 1261753824873120032, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_Name
       value: Hamburger-menu
+      objectReference: {fileID: 0}
+    - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1722299416}
+    - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: Toggle
+      objectReference: {fileID: 0}
+    - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: HamburgerMenuController, Assembly-CSharp
       objectReference: {fileID: 0}
     - target: {fileID: 3574496626412170863, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_Sprite
@@ -1591,7 +1611,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4278996377
   m_fontColor: {r: 0.6, g: 0.3019608, b: 0.047058824, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -1604,12 +1624,12 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
+  m_fontSize: 28
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -2632,6 +2652,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: dadcc8a6e9334fd2b7fcec6d29a199c6, type: 3}
+--- !u!114 &1722299416 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1000015, guid: dadcc8a6e9334fd2b7fcec6d29a199c6, type: 3}
+  m_PrefabInstance: {fileID: 1722299415}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 816ed81af8a01894bb1e692d4b6c4a9c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1759037387
 PrefabInstance:
   m_ObjectHideFlags: 0
