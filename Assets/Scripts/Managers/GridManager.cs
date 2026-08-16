@@ -32,6 +32,7 @@ public class GridManager : MonoBehaviour
     [SerializeField] private float costLabelFontSize = 2.0f;    // cost label size (tune in Inspector)
     [SerializeField] private float hintLabelFontSize = 2.4f;    // hint label size (tune in Inspector)
     [SerializeField] private TileBase goldTile;                 // optimal-corridor highlight tile (assign in Inspector)
+    [SerializeField] private TextMeshProUGUI levelLabel;        // scene "Level Label"; written in LoadComplete
 
     [Header("Grid Size Presets")]
     [Tooltip("Per grid-size (width x height) transform for the Grid root. Keyed by loaded dimensions, NOT level number. The camera stays fixed; the grid is hand-placed per size.")]
@@ -346,6 +347,8 @@ public class GridManager : MonoBehaviour
         def = d;
         _currentDef = d;
         _currentOptUtil = d.optUtil > 0 ? d.optUtil : 1;
+
+        if (levelLabel != null) levelLabel.text = $"Level {levelNumber:00}";
 
         int ecoCount = (def.ecoData1 != null) ? def.ecoData1.Count : 0;
         Debug.Log($"[LoadComplete] Level Data Loaded. EcoData1 Count: {ecoCount}, Budget (Tile Limit): {d.budget}");

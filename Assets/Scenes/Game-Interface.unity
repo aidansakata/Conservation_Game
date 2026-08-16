@@ -1002,6 +1002,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1679952749}
     - target: {fileID: 8583787489926874068, guid: 4c3cfe41ce0efef409e9a7e0b47faeb0, type: 3}
+      propertyPath: levelLabel
+      value: 
+      objectReference: {fileID: 883347754}
+    - target: {fileID: 8583787489926874068, guid: 4c3cfe41ce0efef409e9a7e0b47faeb0, type: 3}
       propertyPath: showCellValues
       value: 1
       objectReference: {fileID: 0}
