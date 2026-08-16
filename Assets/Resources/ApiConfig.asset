@@ -13,3 +13,4 @@ MonoBehaviour:
   m_Name: ApiConfig
   m_EditorClassIdentifier: 
   baseApiUrl: http://127.0.0.1:4000
+  useBundledLevels: 0
