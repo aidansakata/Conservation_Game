@@ -1,0 +1,66 @@
+/* Responsive template for Panther Quest.
+   Full-bleed page; the canvas is centred and sized in index.html to the largest
+   16:9 box that fits, so this background shows through as the letterbox bars. */
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;          /* no scrollbars: the canvas never exceeds the viewport */
+  background: #1a1410;       /* warm near-black, reads as intentional against the art */
+}
+
+#unity-container {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#unity-canvas {
+  display: block;
+  background: #1a1410;
+  /* width/height are set in JS by fitCanvas(); do not hardcode them here */
+}
+
+/* Keep focus outlines off the game surface */
+#unity-canvas:focus { outline: none; }
+
+#unity-loading-bar {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: none;
+}
+
+#unity-progress-bar-empty {
+  width: 280px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+#unity-progress-bar-full {
+  width: 0%;
+  height: 100%;
+  background: #a9d92a;       /* leaf green, sampled from the game's palette */
+  border-radius: 7px;
+  transition: width 0.15s ease-out;
+}
+
+#unity-warning {
+  position: absolute;
+  left: 50%;
+  top: 12px;
+  transform: translate(-50%, 0);
+  background: white;
+  padding: 10px;
+  display: none;
+  text-align: center;
+  font-family: sans-serif;
+  z-index: 10;
+}

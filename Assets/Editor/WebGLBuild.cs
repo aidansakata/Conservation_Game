@@ -26,6 +26,7 @@ public static class WebGLBuild
         sb.AppendLine("  defaultWebScreenHeight = " + PlayerSettings.defaultWebScreenHeight);
         sb.AppendLine("  runInBackground        = " + PlayerSettings.runInBackground);
         sb.AppendLine("  dataCaching            = " + PlayerSettings.WebGL.dataCaching);
+        sb.AppendLine("  template               = " + PlayerSettings.WebGL.template);
         sb.AppendLine("  activeBuildTarget      = " + EditorUserBuildSettings.activeBuildTarget);
         return sb.ToString();
     }
@@ -49,8 +50,44 @@ public static class WebGLBuild
         PlayerSettings.defaultWebScreenHeight = 1080;
         PlayerSettings.runInBackground = true;
 
+        // Custom template that letterboxes the canvas instead of pinning it to
+        // 1920x1080, which cropped the game on any smaller viewport.
+        PlayerSettings.WebGL.template = "PROJECT:Responsive";
+
         AssetDatabase.SaveAssets();
         Debug.Log("[B-4] BEFORE\n" + before + "\n[B-4] AFTER\n" + Settings());
+    }
+
+    /// Fix 2: assigns GridManager's new levelLabel field to the scene's "Level Label"
+    /// TMP object. The text was a hardcoded "Level 01" with no writer; GridManager now
+    /// sets it in LoadComplete, but the reference has to be bound in the scene.
+    [MenuItem("Tools/Build5/FIX-2 Wire Level Label")]
+    public static void WireLevelLabel()
+    {
+        const string SCENE = "Assets/Scenes/Game-Interface.unity";
+        var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(SCENE);
+
+        var gm = Object.FindObjectOfType<GridManager>(true);
+        if (gm == null) { Debug.Log("[FIX-2] !! GridManager not found in " + SCENE); return; }
+
+        TMPro.TextMeshProUGUI label = null;
+        foreach (var t in Object.FindObjectsOfType<TMPro.TextMeshProUGUI>(true))
+            if (t.gameObject.name == "Level Label") { label = t; break; }
+        if (label == null) { Debug.Log("[FIX-2] !! 'Level Label' not found in " + SCENE); return; }
+
+        var so = new SerializedObject(gm);
+        var prop = so.FindProperty("levelLabel");
+        if (prop == null) { Debug.Log("[FIX-2] !! serialized property 'levelLabel' not found"); return; }
+        prop.objectReferenceValue = label;
+        so.ApplyModifiedPropertiesWithoutUndo();
+        EditorUtility.SetDirty(gm);
+        if (PrefabUtility.IsPartOfPrefabInstance(gm))
+            PrefabUtility.RecordPrefabInstancePropertyModifications(gm);
+
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+        UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
+        Debug.Log("[FIX-2] bound GridManager.levelLabel -> '" + label.name
+                  + "' (current text: '" + label.text + "') and SAVED " + SCENE);
     }
 
     [MenuItem("Tools/Build5/B-5 Switch To WebGL")]
