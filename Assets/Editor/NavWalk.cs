@@ -40,6 +40,7 @@ public static class NavWalk
         Add("MainMenu", "Play Button", "LevelSelect", "1  MainMenu Play");
         Add("MainMenu", "How to Play Button", "HowToPlay", "2  MainMenu How to Play");
         Add("HowToPlay", "Next Button", "Patches", "3  HowToPlay Next");
+        Add("HowToPlay", "Play Button", "LevelSelect", "3b HowToPlay Play");
         foreach (var t in new[] { "City", "Grassland", "Forest", "Road", "Farmland", "Habitats" })
             Add("Patches", t, "Single Patch", "4  Patches tile " + t);
         Add("Single Patch", "Back Button", "Patches", "5  Single Patch Back");

@@ -75,7 +75,9 @@ public static class NavigationPass4
                                "MainMenuController.GoToPatchesFromHowToPlay  [sets PatchesReturnScene=HowToPlay]");
         else ReconBuild.Log("   !! Next Button not found");
         var htPlay = Find(st, "Play Button");
-        ReconBuild.Log("   NOTE Play Button left UNWIRED - the target graph specifies no destination for it");
+        if (htPlay != null) Wire(htPlay, new UnityAction(mm.GoToLevelSelect),
+                                 "MainMenuController.GoToLevelSelect  [loads LevelSelect]");
+        else ReconBuild.Log("   !! Play Button not found");
         ReconBuild.SaveActive();
 
         // ---- N-4: Patches "Play" -> LevelSelect ----
