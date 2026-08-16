@@ -369,5 +369,187 @@ public static class TypographyPass3
         ReconBuild.Log("text overflowing its rect ........... " + overflow + "   -> " + (overflow == 0 ? "PASS" : "FAIL"));
         ReconBuild.DumpLog("F-6 Audit");
     }
+
+    /// Pass-1/2 sized single-line rects to the GLYPH bounding box measured in the baked
+    /// art. A TMP rect must hold the whole LINE BOX (ascender to descender), which is
+    /// taller, so those fields spilled once a real font was assigned. This grows such
+    /// rects vertically about their own centre (anchors stay fractional, offsets stay 0)
+    /// and turns off wrapping on genuinely single-line fields so they shrink to fit width
+    /// instead of breaking onto a second line.
+    [MenuItem("Tools/Type3/F-6 Fix Single-Line Rects")]
+    public static void F6_FixRects()
+    {
+        ReconBuild.ResetLog();
+        var jobs = new (string scene, string[] fields)[] {
+            ("Assets/Scenes/Single Patch.unity", new[]{ "Tile Name", "Tile Score" }),
+            ("Assets/Scenes/Game-Interface.unity", new[]{ "Level Label", "Pts Label", "Patches Label" }),
+            ("Assets/Scenes/Patches.unity", new[]{ "City Heading","Grassland Heading","Forest Heading","Road Heading","Farmland Heading","Habitat Heading" }),
+            ("Assets/Scenes/LevelSelect.unity", new[]{ "Title", "Caption 2" }),
+        };
+        foreach (var (scene, fields) in jobs)
+        {
+            EditorSceneManager.OpenScene(scene);
+            var st = ReconBuild.FindDeep(ReconBuild.Find("Canvas").transform, "Stage");
+            ReconBuild.Log("--- " + System.IO.Path.GetFileNameWithoutExtension(scene));
+            foreach (var f in fields) GrowToLineBox(st, f);
+            ReconBuild.SaveActive();
+        }
+        AssetDatabase.SaveAssets();
+        ReconBuild.DumpLog("F-6 Fix Rects");
+    }
+
+    static void GrowToLineBox(Transform stage, string name)
+    {
+        var t = ReconBuild.FindDeep(stage, name);
+        if (t == null) { ReconBuild.Log("   !! missing " + name); return; }
+        var tmp = t.GetComponent<TextMeshProUGUI>();
+        var rt = tmp.rectTransform;
+        tmp.enableWordWrapping = false;          // single-line field
+        tmp.overflowMode = TextOverflowModes.Overflow;
+        tmp.ForceMeshUpdate();
+
+        float need = tmp.fontSizeMax * 1.30f;    // line box incl. ascender + descender + slack
+        float have = rt.rect.height;
+        if (have >= need - 0.5f)
+        {
+            ReconBuild.Log(string.Format("   {0,-18} rect h={1:0} >= need {2:0}  (wrap off)", name, have, need));
+            return;
+        }
+        // grow symmetrically about the current centre, in Stage-normalised units
+        float stageH = ((RectTransform)stage).rect.height;
+        if (stageH <= 1f) stageH = 1080f;
+        float grow = (need - have) / stageH / 2f;
+        var mn = rt.anchorMin; var mx = rt.anchorMax;
+        mn.y -= grow; mx.y += grow;
+        rt.anchorMin = mn; rt.anchorMax = mx;
+        rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+        tmp.ForceMeshUpdate();
+        ReconBuild.Log(string.Format("   {0,-18} rect h {1:0} -> {2:0} (need {3:0})  anchors y {4:0.0000}..{5:0.0000}  wrap off",
+            name, have, rt.rect.height, need, mn.y, mx.y));
+    }
+
+    /// Same line-box problem as the TMP fields, but for the two legacy UI.Text readouts:
+    /// their rects were the measured glyph box, so best-fit was shrinking 74pt art down to
+    /// 23pt to make the line height fit. Grows both rects about their centre.
+    [MenuItem("Tools/Type3/F-6 Fix Legacy Text Rects")]
+    public static void F6_FixLegacy()
+    {
+        ReconBuild.ResetLog();
+        EditorSceneManager.OpenScene("Assets/Scenes/Game-Interface.unity");
+        var st = ReconBuild.FindDeep(ReconBuild.Find("Canvas").transform, "Stage");
+        float stageH = ((RectTransform)st).rect.height; if (stageH <= 1f) stageH = 1080f;
+        float stageW = ((RectTransform)st).rect.width; if (stageW <= 1f) stageW = 1920f;
+        foreach (var (nm, target) in new[] { ("Score Value", 74f), ("Budget Value", 66f) })
+        {
+            var t = ReconBuild.FindDeep(st, nm);
+            var ui = t.GetComponent<Text>();
+            var rt = ui.rectTransform;
+            float needH = target * 1.32f;              // line box
+            float needW = target * 0.58f * 2f + 12f;   // two digits at the art's size
+            float haveH = rt.rect.height, haveW = rt.rect.width;
+            var mn = rt.anchorMin; var mx = rt.anchorMax;
+            if (haveH < needH) { float g = (needH - haveH) / stageH / 2f; mn.y -= g; mx.y += g; }
+            if (haveW < needW) { float g = (needW - haveW) / stageW / 2f; mn.x -= g; mx.x += g; }
+            rt.anchorMin = mn; rt.anchorMax = mx;
+            rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+            ReconBuild.Log(string.Format("   {0,-13} rect {1:0}x{2:0} -> {3:0}x{4:0}  (need {5:0}x{6:0})",
+                nm, haveW, haveH, rt.rect.width, rt.rect.height, needW, needH));
+        }
+        ReconBuild.SaveActive();
+        AssetDatabase.SaveAssets();
+        ReconBuild.DumpLog("F-6 Fix Legacy Rects");
+    }
+
+    /// Sets every dynamic field to its worst case and reports whether it fits.
+    [MenuItem("Tools/Type3/F-6 Longest String Check")]
+    public static void F6_Longest()
+    {
+        ReconBuild.ResetLog();
+
+        // ---- Single Patch: the six names, score lines and bodies ----
+        EditorSceneManager.OpenScene("Assets/Scenes/Single Patch.unity");
+        var st = ReconBuild.FindDeep(ReconBuild.Find("Canvas").transform, "Stage");
+        string[] names = { "Forest", "City", "Farmland", "Grassland", "Habitat", "Road" };
+        string[] scores = { "Score: 80–100", "Score: 1–20", "Score: 30–60", "Score: 40–70", "Score: N/A", "Score: N/A" };
+        string[] bodies = {
+            "Forests are the Florida panther’s home. They give panthers places to hunt for food, hide, and raise their kittens safely.",
+            "Cities and urban areas are difficult for panthers to cross safely. Heavy traffic and loss of natural habitat make these areas dangerous.",
+            "Farmlands offer some open space for panthers to move through, but lack the shelter and prey density of natural habitats.",
+            "Grasslands provide open corridors for panther movement and support prey species like deer that panthers depend on.",
+            "Protected habitat patches are the starting and ending points of the panther’s corridor. These are the areas we are trying to connect.",
+            "Roads are impassable barriers for panthers and cannot be selected as part of the corridor. Wildlife crossings are needed to help panthers cross safely." };
+        ReconBuild.Log("SINGLE PATCH (all six patch types, worst case each field):");
+        for (int i = 0; i < 6; i++)
+        {
+            Probe(st, "Tile Name", names[i]);
+            Probe(st, "Tile Score", scores[i]);
+            Probe(st, "Tile Description", bodies[i]);
+        }
+
+        // ---- Game-Interface: level label, score, patch count ----
+        EditorSceneManager.OpenScene("Assets/Scenes/Game-Interface.unity");
+        st = ReconBuild.FindDeep(ReconBuild.Find("Canvas").transform, "Stage");
+        ReconBuild.Log("");
+        ReconBuild.Log("GAME-INTERFACE:");
+        foreach (var s in new[] { "Level 01", "Level 09", "Level 10" }) Probe(st, "Level Label", s);
+        foreach (var nm in new[] { "Score Value", "Budget Value" })
+        {
+            var t = ReconBuild.FindDeep(st, nm);
+            var ui = t.GetComponent<Text>();
+            foreach (var v in new[] { "999", "9999", "99" })
+            {
+                ui.text = v;
+                Canvas.ForceUpdateCanvases();
+                var gen = ui.cachedTextGenerator;
+                var settings = ui.GetGenerationSettings(ui.rectTransform.rect.size);
+                gen.Populate(v, settings);
+                // With resizeTextForBestFit, Unity shrinks until it fits; fontSizeUsed is the
+                // size actually chosen. Measuring preferred size at maxSize is meaningless here.
+                int used = gen.fontSizeUsedForBestFit;
+                var ext = gen.rectExtents;
+                bool clipped = used <= ui.resizeTextMinSize &&
+                               (ext.width > ui.rectTransform.rect.width + 1f);
+                ReconBuild.Log(string.Format("   [legacy] {0,-13} \"{1,-4}\" bestFit chose {2,3}pt (range {3}..{4})  rect {5,4:0}x{6,-4:0}  {7}",
+                    nm, v, used, ui.resizeTextMinSize, ui.resizeTextMaxSize,
+                    ui.rectTransform.rect.width, ui.rectTransform.rect.height,
+                    clipped ? "CLIPPED <<<" : "fits"));
+            }
+        }
+
+        // ---- LevelSelect numerals ----
+        EditorSceneManager.OpenScene("Assets/Scenes/LevelSelect.unity");
+        st = ReconBuild.FindDeep(ReconBuild.Find("Canvas").transform, "Stage");
+        ReconBuild.Log("");
+        ReconBuild.Log("LEVELSELECT numerals (widest is 10):");
+        var lvl10 = ReconBuild.FindDeep(st, "Level 10");
+        if (lvl10 != null) ProbeTmp(lvl10.GetComponentInChildren<TextMeshProUGUI>(true), "10", "Level 10 label");
+
+        ReconBuild.DumpLog("F-6 Longest String");
+    }
+
+    static void Probe(Transform stage, string path, string value)
+    {
+        var t = ReconBuild.FindDeep(stage, path);
+        if (t == null) { ReconBuild.Log("   !! missing " + path); return; }
+        ProbeTmp(t.GetComponent<TextMeshProUGUI>(), value, path);
+    }
+
+    static void ProbeTmp(TextMeshProUGUI tmp, string value, string label)
+    {
+        if (tmp == null) { ReconBuild.Log("   !! no TMP for " + label); return; }
+        string old = tmp.text;
+        tmp.text = value;
+        tmp.ForceMeshUpdate();
+        var r = tmp.rectTransform.rect;
+        float used = tmp.textInfo.characterCount > 0 ? tmp.renderedHeight : 0f;
+        bool over = tmp.isTextOverflowing || tmp.preferredHeight > r.height + 1f;
+        float actual = tmp.fontSize;   // resolved size after auto-sizing
+        string shown = value.Length > 34 ? value.Substring(0, 34) + "..." : value;
+        ReconBuild.Log(string.Format("   {0,-17} \"{1,-37}\" resolved={2,5:0.0} (min {3:0}) rect {4,4:0}x{5,-4:0} pref {6,4:0}x{7,-4:0}  {8}",
+            label, shown, actual, tmp.fontSizeMin, r.width, r.height, tmp.preferredWidth, tmp.preferredHeight,
+            over ? "OVERFLOW <<<" : (actual <= tmp.fontSizeMin + 0.01f ? "at min size <<<" : "fits")));
+        tmp.text = old;
+        tmp.ForceMeshUpdate();
+    }
 }
 #endif
