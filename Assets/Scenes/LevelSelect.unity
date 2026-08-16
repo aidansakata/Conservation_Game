@@ -152,7 +152,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: OnLevelButtonPressed
+      value: SelectLevel
       objectReference: {fileID: 0}
     - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
@@ -528,7 +528,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: OnLevelButtonPressed
+      value: SelectLevel
       objectReference: {fileID: 0}
     - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
@@ -800,7 +800,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: OnLevelButtonPressed
+      value: SelectLevel
       objectReference: {fileID: 0}
     - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
@@ -1437,7 +1437,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: OnLevelButtonPressed
+      value: SelectLevel
       objectReference: {fileID: 0}
     - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
@@ -1784,7 +1784,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: OnLevelButtonPressed
+      value: SelectLevel
       objectReference: {fileID: 0}
     - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
@@ -2100,7 +2100,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: OnLevelButtonPressed
+      value: SelectLevel
       objectReference: {fileID: 0}
     - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
@@ -2372,7 +2372,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: OnLevelButtonPressed
+      value: SelectLevel
       objectReference: {fileID: 0}
     - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
@@ -2693,7 +2693,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: OnLevelButtonPressed
+      value: SelectLevel
       objectReference: {fileID: 0}
     - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
@@ -2831,7 +2831,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: OnLevelButtonPressed
+      value: SelectLevel
       objectReference: {fileID: 0}
     - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
@@ -2969,7 +2969,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: OnLevelButtonPressed
+      value: SelectLevel
       objectReference: {fileID: 0}
     - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName

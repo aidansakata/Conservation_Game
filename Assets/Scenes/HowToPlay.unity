@@ -469,6 +469,50 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 353275988}
   m_CullTransparentMesh: 1
+--- !u!1 &477283773
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 477283775}
+  - component: {fileID: 477283774}
+  m_Layer: 0
+  m_Name: HowToPlayUI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &477283774
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 477283773}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8acb2dfb1be5fc0498a39baf07720370, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &477283775
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 477283773}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &547394628
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -480,6 +524,26 @@ PrefabInstance:
     - target: {fileID: 1261753824873120032, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_Name
       value: Next Button
+      objectReference: {fileID: 0}
+    - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 477283774}
+    - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: GoToPatchesFromHowToPlay
+      objectReference: {fileID: 0}
+    - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: MainMenuController, Assembly-CSharp
       objectReference: {fileID: 0}
     - target: {fileID: 3574496626412170863, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_Sprite
@@ -1384,7 +1448,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 39
+  m_fontSize: 38.4
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -1518,3 +1582,4 @@ SceneRoots:
   - {fileID: 77047370}
   - {fileID: 1391513469}
   - {fileID: 1722299415}
+  - {fileID: 477283775}
