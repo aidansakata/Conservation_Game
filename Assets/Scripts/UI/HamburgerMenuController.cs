@@ -16,4 +16,9 @@ public class HamburgerMenuController : MonoBehaviour
         }
         panel.SetActive(!panel.activeSelf);
     }
+
+    // Overlay "Home" item. SceneLoader is a static class, so a UnityEvent cannot bind to
+    // it directly; this controller already sits on the overlay prefab root and is the
+    // natural owner, which also lets all four instances inherit one prefab-level binding.
+    public void GoHome() => SceneLoader.LoadMainMenu();
 }

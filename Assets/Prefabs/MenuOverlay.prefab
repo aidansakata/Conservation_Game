@@ -641,7 +641,27 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1261753824873120032, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_Name
-      value: Menu 01
+      value: Home
+      objectReference: {fileID: 0}
+    - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1000015}
+    - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: GoHome
+      objectReference: {fileID: 0}
+    - target: {fileID: 2268866176239291569, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: HamburgerMenuController, Assembly-CSharp
       objectReference: {fileID: 0}
     - target: {fileID: 3574496626412170863, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_Color.a
@@ -729,7 +749,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6294492158408079837, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_text
-      value: Menu 01
+      value: Home
       objectReference: {fileID: 0}
     - target: {fileID: 6294492158408079837, guid: 25c8ea492f9e5874c913246982aa77b8, type: 3}
       propertyPath: m_fontSize
